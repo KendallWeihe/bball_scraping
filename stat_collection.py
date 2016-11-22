@@ -20,9 +20,9 @@ while not over:
     game_time = soup.find('span', class_="game-time")
     game_time = str(game_time.string)
 
-    # pdb.set_trace()
+    pdb.set_trace()
 
-    if game_time == "Final/OT":
+    if game_time == "Final/OT" or game_time == "Final":
         over = True
 
     elif game_time != "Halftime" and game_time != 'None':
