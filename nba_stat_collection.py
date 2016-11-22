@@ -54,5 +54,5 @@ while not over:
 
         time.sleep(60)
 
-filename = "data/" + sys.argv[2] + ".csv"
+filename = "nba_data/" + sys.argv[2] + ".csv"
 np.savetxt(filename, np.array(output_table), delimiter=",")

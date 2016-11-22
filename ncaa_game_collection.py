@@ -7,7 +7,7 @@ import datetime
 import os
 
 # scores_link = "http://www.espn.com/nba/scoreboard"
-scores_link = "http://www.espn.com/nba/scoreboard/_/date/20161122"
+scores_link = "http://www.espn.com/mens-college-basketball/scoreboard"
 
 r = requests.get(scores_link)
 soup = BeautifulSoup(r.text, "html.parser")
@@ -28,17 +28,18 @@ for script in scripts:
                 team = team + text[k]
             team_names.append(team)
 
-        indices = [i for i in range(len(str(script.string))) if str(script.string).startswith('http://www.espn.com/nba/game?gameId=', i)]
+        indices = [i for i in range(len(str(script.string))) if str(script.string).startswith('http://www.espn.com/mens-college-basketball/conversation?gameId=', i)]
+        # pdb.set_trace()
         game_links = []
         for j in range(len(indices)):
-            game_links.append(str(script.string[indices[j]:indices[j]+45]))
+            game_links.append(str(script.string[indices[j]:indices[j]+73]).replace("conversation","matchup"))
 
         time_indices = [i for i in range(len(str(script.string))) if str(script.string).startswith('shortDetail', i)]
         times = []
-        # pdb.set_trace()
         for j in range(0,len(time_indices),2):
             text = str(script.string[time_indices[j]:time_indices[j]+100])
-            times.append(re.findall("\d+:\d+", text)[0])
+            if re.findall("\d+:\d+", text) != []:
+                times.append(re.findall("\d+:\d+", text)[0])
 
 adjusted_times = []
 for i in range(len(times)):
@@ -68,7 +69,7 @@ for i in range(len(game_links)):
     game_links[i] = game_links[i].replace("game?", "matchup?")
 
 started_games = []
-# pdb.set_trace()
+pdb.set_trace()
 while 1:
 
     time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -81,5 +82,5 @@ while 1:
             if time == adjusted_times[i] and i not in started_games:
                 # print "starting new game"
                 started_games.append(i)
-                command = "python stat_collection.py " + str(game_links[i]) + " " + str(adjusted_teams[i][0]) + "_" + str(adjusted_teams[i][1]) + " &"
+                command = "python ncaa_stat_collection.py " + str(game_links[i]) + " " + str(adjusted_teams[i][0]) + "_" + str(adjusted_teams[i][1]) + " &"
                 os.system(command)
