@@ -6,7 +6,8 @@ import re
 import datetime
 import os
 
-scores_link = "http://www.espn.com/nba/scoreboard"
+# scores_link = "http://www.espn.com/nba/scoreboard"
+scores_link = "http://www.espn.com/nba/scoreboard/_/date/20161122"
 
 r = requests.get(scores_link)
 soup = BeautifulSoup(r.text, "html.parser")
@@ -34,6 +35,7 @@ for script in scripts:
 
         time_indices = [i for i in range(len(str(script.string))) if str(script.string).startswith('shortDetail', i)]
         times = []
+        # pdb.set_trace()
         for j in range(0,len(time_indices),2):
             text = str(script.string[time_indices[j]:time_indices[j]+100])
             times.append(re.findall("\d+:\d+", text)[0])
@@ -62,12 +64,11 @@ adjusted_teams = []
 for i in range(0,len(team_names),2):
     adjusted_teams.append([team_names[i], team_names[i+1]])
 
-adjusted_links = []
 for i in range(len(game_links)):
     game_links[i] = game_links[i].replace("game?", "matchup?")
 
 started_games = []
-pdb.set_trace()
+# pdb.set_trace()
 while 1:
 
     time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")

@@ -20,7 +20,7 @@ while not over:
     game_time = soup.find('span', class_="game-time")
     game_time = str(game_time.string)
 
-    pdb.set_trace()
+    # pdb.set_trace(
 
     if game_time == "Final/OT" or game_time == "Final":
         over = True
@@ -29,6 +29,9 @@ while not over:
         # pdb.set_trace()
         table = soup.find('table', class_="mod-data")
         team_rows = table.findAll('tr')
+
+        score_1 = str(soup.find('div', class_="score icon-font-after").string)
+        score_2 = str(soup.find('div', class_="score icon-font-before").string)
 
         field_goal_percentages = re.findall("\d+\.\d+", str(team_rows[2]))
         three_point_percentages = re.findall("\d+\.\d+", str(team_rows[4]))
@@ -42,7 +45,7 @@ while not over:
         points_in_paint = re.findall("\d+", str(team_rows[17]))
         personal_fouls = re.findall("\d+", str(team_rows[18]))
 
-        row = np.array([field_goal_percentages, three_point_percentages, free_throw_percentages, total_rebounds, assists, steals, blocks, turnovers, fast_break_points, points_in_paint, personal_fouls], dtype=np.float16)
+        row = np.array([[score_1, score_2], field_goal_percentages, three_point_percentages, free_throw_percentages, total_rebounds, assists, steals, blocks, turnovers, fast_break_points, points_in_paint, personal_fouls], dtype=np.float16)
         row = row.flatten()
         output_table.append(row)
 
