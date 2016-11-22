@@ -3,46 +3,53 @@ import numpy as np
 import requests
 from bs4 import BeautifulSoup
 import re
+import sys
+import time
 
 
-scores_link = "http://www.espn.com/nba/scoreboard"
+# link = "http://www.espn.com/nba/matchup?gameId=400899645"
+link = sys.argv[1]
+over = False
+output_table = []
 
-r = requests.get(scores_link)
-soup = BeautifulSoup(r.text, "html.parser")
+while not over:
 
-scripts = soup.find_all('script')
-pattern = re.compile('window.espn.scoreboardData')
+    r = requests.get(link)
+    soup = BeautifulSoup(r.text, "html.parser")
 
-for script in scripts:
-    if(pattern.match(str(script.string))):
-       pdb.set_trace()
-       indices = [i for i in range(len(str(script.string))) if str(script.string).startswith('http://www.espn.com/nba/game?gameId=', i)]
-       game_links = []
-       for j in range(len(indices)):
-           game_links.append(str(script.string[indices[0]:indices[0]+45]))
+    game_time = soup.find('span', class_="game-time")
+    game_time = str(game_time.string)
 
-pdb.set_trace()
+    # pdb.set_trace()
 
+    if game_time == "Final/OT":
+        over = True
 
+    elif game_time != "Halftime" and game_time != 'None':
+        # pdb.set_trace()
+        table = soup.find('table', class_="mod-data")
+        team_rows = table.findAll('tr')
 
-link = "http://www.espn.com/nba/matchup?gameId=400899645"
+        field_goal_percentages = re.findall("\d+\.\d+", str(team_rows[2]))
+        three_point_percentages = re.findall("\d+\.\d+", str(team_rows[4]))
+        free_throw_percentages = re.findall("\d+\.\d+", str(team_rows[6]))
+        total_rebounds = re.findall("\d+", str(team_rows[7]))
+        assists = re.findall("\d+", str(team_rows[11]))
+        steals = re.findall("\d+", str(team_rows[12]))
+        blocks = re.findall("\d+", str(team_rows[13]))
+        turnovers = re.findall("\d+", str(team_rows[14]))
+        fast_break_points = re.findall("\d+", str(team_rows[16]))
+        points_in_paint = re.findall("\d+", str(team_rows[17]))
+        personal_fouls = re.findall("\d+", str(team_rows[18]))
 
-r = requests.get(link)
-soup = BeautifulSoup(r.text, "html.parser")
-table = soup.find('table', class_="mod-data")
-team_rows = table.findAll('tr')
+        row = np.array([field_goal_percentages, three_point_percentages, free_throw_percentages, total_rebounds, assists, steals, blocks, turnovers, fast_break_points, points_in_paint, personal_fouls], dtype=np.float16)
+        row = row.flatten()
+        output_table.append(row)
 
-field_goal_percentages = re.findall("\d+\.\d+", str(team_rows[2]))
-three_point_percentages = re.findall("\d+\.\d+", str(team_rows[4]))
-free_throw_percentages = re.findall("\d+\.\d+", str(team_rows[6]))
-total_rebounds = re.findall("\d+", str(team_rows[7]))
-assists = re.findall("\d+", str(team_rows[11]))
-steals = re.findall("\d+", str(team_rows[12]))
-blocks = re.findall("\d+", str(team_rows[13]))
-turnovers = re.findall("\d+", str(team_rows[14]))
-fast_break_points = re.findall("\d+", str(team_rows[16]))
-points_in_paint = re.findall("\d+", str(team_rows[17]))
-personal_fouls = re.findall("\d+", str(team_rows[18]))
+        filename = "data/" + sys.argv[2] + ".csv"
+        np.savetxt(filename, np.array(output_table), delimiter=",")
 
-pdb.set_trace()
-print "here"
+        time.sleep(60)
+
+filename = "data/" + sys.argv[2] + ".csv"
+np.savetxt(filename, np.array(output_table), delimiter=",")
