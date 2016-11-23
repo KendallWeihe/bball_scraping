@@ -79,7 +79,9 @@ while 1:
         # print "time(s) found"
         for i in range(len(adjusted_times)):
             if time == adjusted_times[i] and i not in started_games:
-                # print "starting new game"
+                print "starting new game -- " + adjusted_teams[i][0] + " " + adjusted_teams[i][1]
                 started_games.append(i)
+                adjusted_teams[i][0].replace(" ", "_")
+                adjusted_teams[i][1].replace(" ", "_")
                 command = "python nba_stat_collection.py " + str(game_links[i]) + " " + str(adjusted_teams[i][0]) + "_" + str(adjusted_teams[i][1]) + " &"
                 os.system(command)
