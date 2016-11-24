@@ -163,6 +163,7 @@ with tf.Session() as sess:
         if np.mean(np.abs(np.array(pred_val - prediction_ground_truth))) < min_diff:
             save_path = "./lstm_models/lstm_model_" + str(step) + ".ckpt"
             saver.save(sess, save_path)
+            min_diff = np.mean(np.abs(np.array(pred_val - prediction_ground_truth)))
 
 
     print("Optimization Finished!")
