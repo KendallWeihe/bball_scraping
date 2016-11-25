@@ -99,5 +99,5 @@ while 1:
                 started_games.append(i)
                 teams[i][0].replace(" ", "_")
                 teams[i][1].replace(" ", "_")
-                command = "python ncaa_stat_collection.py " + str(game_links[i]) + " " + str(teams[i][0]) + "_" + str(teams[i][1]) + "_new" + " &"
+                command = "python ncaa_stat_collection.py " + str(game_links[i]) + " " + str(teams[i][0]) + "_" + str(teams[i][1]) + " &"
                 os.system(command)
