@@ -20,9 +20,13 @@ display_step = 5
 # Network Parameters
 n_input = 22 # MNIST data input (img shape: 28*28)
 # max_size = 400
-n_steps = 150 # timesteps
+n_steps = 143 # timesteps
 n_hidden = 64 # hidden layer num of features
 n_classes = 1 # MNIST total classes (0-9 digits)
+
+prediction_data = np.genfromtxt("./ncaa_data/Louisville_Wichita_St.csv", delimiter=",")
+n_steps = prediction_data.shape[0]
+prediction_data = prediction_data[0:n_steps,:].reshape((1,n_steps,n_input))
 
 # tf Graph input
 x = tf.placeholder("float", [None, n_steps, n_input])
@@ -55,7 +59,7 @@ def input_data():
         # # pdb.set_trace()
         # input_data.append(csv_data[0:halftime_index,:])
         #TODO write a data verification script
-        if csv_data.shape[0] > 120:
+        if csv_data.shape[0] > n_steps:
             input_data.append(csv_data[0:n_steps,:])
             ground_truth.append(csv_data[csv_data.shape[0]-1,2] - csv_data[csv_data.shape[0]-1,3])
             scores.append(csv_data[n_steps,2] - csv_data[n_steps,3])
@@ -64,15 +68,14 @@ def input_data():
 
 # prediction_data = np.genfromtxt("./ncaa_data/Charleston_Villanova.csv", delimiter=",")
 # prediction_data = np.genfromtxt("./ncaa_data/Colgate_Penn_State.csv", delimiter=",")
-# prediction_data = np.genfromtxt("./ncaa_data/Michigan_South_Carolina.csv", delimiter=",")
-# prediction_data = prediction_data[0:n_steps,:].reshape((1,n_steps,n_input))
+
 
 input_data, ground_truth, scores = input_data()
 training_data = input_data[0:45,:]
 training_ground_truth = ground_truth[0:45]
-prediction_data = input_data[45:51,:]
-prediction_ground_truth = ground_truth[45:51]
-prediction_scores = scores[45:51]
+#prediction_data = input_data[45:51,:]
+#prediction_ground_truth = ground_truth[45:51]
+#prediction_scores = scores[45:51]
 
 def RNN(x, weights, biases):
 
@@ -114,13 +117,17 @@ with tf.Session() as sess:
     step = 1
     min_diff = 17
     # Keep training until reach max iterations
+    avg_diff = []
     while step * batch_size < training_iters:
         acc_batch = []
         loss_batch = []
         # pdb.set_trace()
-        for i in range(len(training_data)):
-            batch_x = training_data[i].reshape((1, training_data[i].shape[0], training_data[i].shape[1]))
-            batch_y = training_ground_truth[i].reshape((1,1))
+        #for i in range(len(training_data)):
+        for i in range(len(input_data)):
+            #batch_x = training_data[i].reshape((1, training_data[i].shape[0], training_data[i].shape[1]))
+            batch_x = input_data[i].reshape((1, input_data[i].shape[0], input_data[i].shape[1]))
+            #batch_y = training_ground_truth[i].reshape((1,1))
+            batch_y = ground_truth[i].reshape((1,1))
             sess.run(optimizer, feed_dict={x: batch_x, y: batch_y})
         # if step % display_step == 0:
             # Calculate batch accuracy
@@ -134,15 +141,19 @@ with tf.Session() as sess:
         step += 1
 
         pred_vals = []
-        # pdb.set_trace()
-        for i in range(len(prediction_data)):
-            batch_x = prediction_data[i].reshape((1, prediction_data[i].shape[0], prediction_data[i].shape[1]))
+        #pdb.set_trace()
+        #for i in range(len(prediction_data)):
+            #batch_x = prediction_data[i].reshape((1, prediction_data[i].shape[0], prediction_data[i].shape[1]))
             # batch_y = prediction_ground_truth[i]
-            pred_val = sess.run(pred, feed_dict={x: batch_x})
-            pred_vals.append(pred_val[0][0])
-            print "Prediction = " + str(pred_val) + "  Actual = " + str(prediction_ground_truth[i]) + "  Score difference = " + str(prediction_scores[i])
+            #pred_val = sess.run(pred, feed_dict={x: batch_x})
+            #pred_vals.append(pred_val[0][0])
+            #print "Prediction = " + str(pred_val) + "  Actual = " + str(prediction_ground_truth[i]) + "  Score difference = " + str(prediction_scores[i])
 
-        print "Average difference = " + str(np.mean(np.abs(np.array(pred_val - prediction_ground_truth))))
+        pred_val = sess.run(pred, feed_dict={x: prediction_data})
+        print "Prediction = " + str(pred_val)
+        avg_diff.append(pred_val)
+        print "Average = " + str(np.mean(np.array(avg_diff)))
+        #print "Average difference = " + str(np.mean(np.abs(np.array(pred_val - prediction_ground_truth))))
 
         # if step % 50 == 0:
         #     prediction_ground_truth = prediction_ground_truth.tolist()
@@ -160,10 +171,10 @@ with tf.Session() as sess:
         #     # pdb.set_trace()
         #     prediction_ground_truth = np.array(prediction_ground_truth)
 
-        if np.mean(np.abs(np.array(pred_val - prediction_ground_truth))) < min_diff:
-            save_path = "./lstm_models/lstm_model_" + str(step) + ".ckpt"
-            saver.save(sess, save_path)
-            min_diff = np.mean(np.abs(np.array(pred_val - prediction_ground_truth)))
+        #if np.mean(np.abs(np.array(pred_val - prediction_ground_truth))) < min_diff:
+        #    save_path = "./lstm_models/lstm_model_" + str(step) + ".ckpt"
+        #    saver.save(sess, save_path)
+        #    min_diff = np.mean(np.abs(np.array(pred_val - prediction_ground_truth)))
 
 
     print("Optimization Finished!")

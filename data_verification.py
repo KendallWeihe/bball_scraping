@@ -8,8 +8,12 @@ avg_shape = []
 print "Number of files = " + str(len(files))
 for csv_file in files:
     csv_data = np.genfromtxt(csv_file, delimiter=",")
-    # if csv_data.shape[0] < 200:
-    #     print csv_file
+    if csv_data.shape[0] < 200:
+        print "Less than 200 "
+        print csv_file
+    if csv_data[0,0] > 1:
+        print "Greater than 1"
+        print csv_file
     avg_shape.append(csv_data.shape[0])
 
 print np.mean(np.array(avg_shape))
