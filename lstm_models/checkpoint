@@ -1,6 +1,2 @@
-model_checkpoint_path: "lstm_model_18.ckpt"
-all_model_checkpoint_paths: "lstm_model_11.ckpt"
-all_model_checkpoint_paths: "lstm_model_12.ckpt"
-all_model_checkpoint_paths: "lstm_model_13.ckpt"
-all_model_checkpoint_paths: "lstm_model_15.ckpt"
-all_model_checkpoint_paths: "lstm_model_18.ckpt"
+model_checkpoint_path: "lstm_model_140.ckpt"
+all_model_checkpoint_paths: "lstm_model_140.ckpt"
