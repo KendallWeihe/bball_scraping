@@ -11,8 +11,8 @@ for csv_file in files:
     if csv_data.shape[0] < 200:
         print "Less than 200 "
         print csv_file
-    if csv_data[0,0] > 1:
-        print "Greater than 1"
+    if csv_data[0,0] > 2:
+        print "Greater than 2"
         print csv_file
     avg_shape.append(csv_data.shape[0])
 

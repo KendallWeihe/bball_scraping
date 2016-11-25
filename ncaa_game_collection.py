@@ -72,9 +72,15 @@ for i in range(len(times)):
 
 print adjusted_times
 print "\n"
+print len(adjusted_times)
+print "\n"
 print teams
 print "\n"
+print len(teams)
+print "\n"
 print game_links
+print "\n"
+print len(game_links)
 
 started_games = []
 pdb.set_trace()
