@@ -14,19 +14,19 @@ handle 28 sequences of 28 steps for every sample.
 # Parameters
 learning_rate = 0.001
 training_iters = 100000
-batch_size = 1
+batch_size = 4
 display_step = 5
 
 # Network Parameters
 n_input = 22 # MNIST data input (img shape: 28*28)
 # max_size = 400
-n_steps = 143 # timesteps
-n_hidden = 64 # hidden layer num of features
+n_steps = 150 # timesteps
+n_hidden = 128 # hidden layer num of features
 n_classes = 1 # MNIST total classes (0-9 digits)
 
-prediction_data = np.genfromtxt("./ncaa_data/Louisville_Wichita_St.csv", delimiter=",")
-n_steps = prediction_data.shape[0]
-prediction_data = prediction_data[0:n_steps,:].reshape((1,n_steps,n_input))
+# prediction_data = np.genfromtxt("./ncaa_data/Louisville_Wichita_St.csv", delimiter=",")
+# n_steps = prediction_data.shape[0]
+# prediction_data = prediction_data[0:n_steps,:].reshape((1,n_steps,n_input))
 
 # tf Graph input
 x = tf.placeholder("float", [None, n_steps, n_input])
@@ -71,11 +71,11 @@ def input_data():
 
 
 input_data, ground_truth, scores = input_data()
-training_data = input_data[0:45,:]
-training_ground_truth = ground_truth[0:45]
-#prediction_data = input_data[45:51,:]
-#prediction_ground_truth = ground_truth[45:51]
-#prediction_scores = scores[45:51]
+training_data = input_data[0:58,:]
+training_ground_truth = ground_truth[0:58]
+prediction_data = input_data[58:66,:]
+prediction_ground_truth = ground_truth[58:66]
+prediction_scores = scores[58:66]
 
 def RNN(x, weights, biases):
 
@@ -122,54 +122,61 @@ with tf.Session() as sess:
         acc_batch = []
         loss_batch = []
         # pdb.set_trace()
-        #for i in range(len(training_data)):
-        for i in range(len(input_data)):
-            #batch_x = training_data[i].reshape((1, training_data[i].shape[0], training_data[i].shape[1]))
-            batch_x = input_data[i].reshape((1, input_data[i].shape[0], input_data[i].shape[1]))
-            #batch_y = training_ground_truth[i].reshape((1,1))
-            batch_y = ground_truth[i].reshape((1,1))
-            sess.run(optimizer, feed_dict={x: batch_x, y: batch_y})
+        start_pos = np.random.randint(len(training_data) - batch_size)
+        # for i in range(start_pos,start_pos+4):
+        # for i in range(len(input_data)):
+        # pdb.set_trace()
+        batch_x = training_data[start_pos:start_pos+batch_size].reshape((batch_size, n_steps, n_input))
+            # batch_x = input_data[i].reshape((1, input_data[i].shape[0], input_data[i].shape[1]))
+        batch_y = training_ground_truth[start_pos:start_pos+batch_size].reshape((batch_size,n_classes))
+            # batch_y = ground_truth[i].reshape((1,1))
+        sess.run(optimizer, feed_dict={x: batch_x, y: batch_y})
         # if step % display_step == 0:
             # Calculate batch accuracy
             # pdb.set_trace()
-            acc = sess.run(accuracy, feed_dict={x: batch_x, y: batch_y})
-            acc_batch.append(acc[0][0])
-            # Calculate batch loss
-            loss = sess.run(cost, feed_dict={x: batch_x, y: batch_y})
-            loss_batch.append(loss)
-        print "Step: " + str(step) + "  Accuracy: " + str(np.mean(np.array(acc_batch))) + "  Loss: " + str(np.mean(np.array(loss_batch)))
+        acc = sess.run(accuracy, feed_dict={x: batch_x, y: batch_y})
+        acc_batch.append(acc[0][0])
+        # Calculate batch loss
+        loss = sess.run(cost, feed_dict={x: batch_x, y: batch_y})
+        loss_batch.append(loss)
+        # print "Step: " + str(step) + "  Accuracy: " + str(np.mean(np.array(acc_batch))) + "  Loss: " + str(np.mean(np.array(loss_batch)))
+        print "Step: " + str(step) + "  Accuracy: " + str(acc[0][0]) + "  Loss: " + str(loss)
         step += 1
 
         pred_vals = []
-        #pdb.set_trace()
-        #for i in range(len(prediction_data)):
-            #batch_x = prediction_data[i].reshape((1, prediction_data[i].shape[0], prediction_data[i].shape[1]))
-            # batch_y = prediction_ground_truth[i]
-            #pred_val = sess.run(pred, feed_dict={x: batch_x})
-            #pred_vals.append(pred_val[0][0])
-            #print "Prediction = " + str(pred_val) + "  Actual = " + str(prediction_ground_truth[i]) + "  Score difference = " + str(prediction_scores[i])
+        local_avg = []
+        # pdb.set_trace()
+        for i in range(len(prediction_data)):
+            batch_x = prediction_data[i].reshape((1, prediction_data[i].shape[0], prediction_data[i].shape[1]))
+            batch_y = prediction_ground_truth[i]
+            pred_val = sess.run(pred, feed_dict={x: batch_x})
+            avg_diff.append(pred_val[0][0] - prediction_ground_truth[i])
+            local_avg.append(pred_val[0][0] - prediction_ground_truth[i])
+            pred_vals.append(pred_val[0][0])
+            print "Prediction = " + str(pred_val) + "  Actual = " + str(prediction_ground_truth[i]) + "  Score difference = " + str(prediction_scores[i])
 
-        pred_val = sess.run(pred, feed_dict={x: prediction_data})
-        print "Prediction = " + str(pred_val)
-        avg_diff.append(pred_val)
-        print "Average = " + str(np.mean(np.array(avg_diff)))
+        # pred_val = sess.run(pred, feed_dict={x: prediction_data})
+        # print "Prediction = " + str(pred_val)
+        # avg_diff.append(pred_val)
+        print "Average = " + str(np.mean(np.abs(np.array(avg_diff))))
         #print "Average difference = " + str(np.mean(np.abs(np.array(pred_val - prediction_ground_truth))))
+        print "Local average = " + str(np.mean(np.abs(np.array(local_avg))))
 
-        # if step % 50 == 0:
-        #     prediction_ground_truth = prediction_ground_truth.tolist()
-        #     plot_data = []
-        #     for i in range(len(pred_vals)):
-        #         plot_data.append([prediction_ground_truth[i], pred_vals[i]])
-        #     # plot_data = [prediction_ground_truth, pred_vals]
-        #     # plt.plot(plot_data, 'ro')
-        #     plt.scatter(prediction_ground_truth, pred_vals)
-        #     plt.grid(True)
-        #     plt.axhline(0, color='black')
-        #     plt.axvline(0, color='black')
-        #     plt.axis((-40,40,-40,40))
-        #     plt.show()
-        #     # pdb.set_trace()
-        #     prediction_ground_truth = np.array(prediction_ground_truth)
+        if step % 50 == 0:
+            prediction_ground_truth = prediction_ground_truth.tolist()
+            plot_data = []
+            for i in range(len(pred_vals)):
+                plot_data.append([prediction_ground_truth[i], pred_vals[i]])
+            # plot_data = [prediction_ground_truth, pred_vals]
+            # plt.plot(plot_data, 'ro')
+            plt.scatter(prediction_ground_truth, pred_vals)
+            plt.grid(True)
+            plt.axhline(0, color='black')
+            plt.axvline(0, color='black')
+            plt.axis((-40,40,-40,40))
+            plt.show()
+            # pdb.set_trace()
+            prediction_ground_truth = np.array(prediction_ground_truth)
 
         #if np.mean(np.abs(np.array(pred_val - prediction_ground_truth))) < min_diff:
         #    save_path = "./lstm_models/lstm_model_" + str(step) + ".ckpt"
