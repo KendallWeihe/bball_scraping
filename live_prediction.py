@@ -10,9 +10,9 @@ training_iters = 100000
 batch_size = 4
 display_step = 5
 
-n_input = 22 
-n_hidden = 128 
-n_classes = 1 
+n_input = 22
+n_hidden = 128
+n_classes = 1
 
 prediction_data = np.genfromtxt("./ncaa_data/Iowa_State_Miami.csv", delimiter=",")
 n_steps = prediction_data.shape[0]

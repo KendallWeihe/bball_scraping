@@ -7,7 +7,7 @@ import datetime
 import os
 
 # scores_link = "http://www.espn.com/nba/scoreboard"
-scores_link = "http://www.espn.com/nba/scoreboard/_/date/20161123"
+scores_link = "http://www.espn.com/nba/scoreboard/_/date/20161203"
 
 r = requests.get(scores_link)
 soup = BeautifulSoup(r.text, "html.parser")

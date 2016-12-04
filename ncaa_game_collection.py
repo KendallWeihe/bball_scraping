@@ -9,7 +9,8 @@ from selenium import webdriver
 import time
 
 
-scores_link = "http://www.espn.com/mens-college-basketball/scoreboard/_/date/20161125"
+# scores_link = "http://www.espn.com/mens-college-basketball/scoreboard"
+scores_link = "http://www.espn.com/mens-college-basketball/scoreboard/_/date/20161204"
 r = requests.get(scores_link)
 
 driver = webdriver.Chrome("/home/kendall/Documents/Development/bball_scraping/chromedriver")
@@ -35,14 +36,14 @@ for game in games:
             times.append(str(re.findall("\d+:\d+ PM ET", str(game.find_all("th", {"class": "date-time"})))[0]))
         else:
             times.append(str(re.findall("\d+:\d+ AM ET", str(game.find_all("th", {"class": "date-time"})))[0]))
-        team_1 = str(game.find_all("span", {"class": "sb-team-short"})[0].string).replace(" ", "_")
-        team_2 = str(game.find_all("span", {"class": "sb-team-short"})[1].string).replace(" ", "_")
+        team_1 = str(game.find_all("span", {"class": "sb-team-short"})[0].string.encode('utf-8')).replace(" ", "_").replace("\'","")
+        team_2 = str(game.find_all("span", {"class": "sb-team-short"})[1].string.encode('utf-8')).replace(" ", "_").replace("\'","")
         teams.append([team_1, team_2])
         game_links.append("http://www.espn.com/mens-college-basketball/matchup?gameId=" + str(game.get("id")))
         cout = count + 1
     except:
         print "count = " + str(count)
-        pdb.set_trace()
+        #pdb.set_trace()
         print "failed"
 
 # pdb.set_trace()
@@ -84,7 +85,7 @@ print "\n"
 print len(game_links)
 
 started_games = []
-pdb.set_trace()
+# pdb.set_trace()
 while 1:
 
     time = datetime.datetime.now().strftime("%Y-%m-%d %-H:%M:%S")
