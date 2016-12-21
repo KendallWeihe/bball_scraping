@@ -24,13 +24,13 @@ with open('team_hash_table.csv', 'rb') as f:
     #     if stat team1 == espn team and stat team2 == ...
     #         append score to output array
 
-tr_data = np.genfromtxt("./stats/w_out_score/2-161203.csv", delimiter=",")
+tr_data = np.genfromtxt("./stats/w_out_score/10-161211.csv", delimiter=",")
 
 
-scores_link = "http://www.espn.com/mens-college-basketball/scoreboard/_/date/20161203"
+scores_link = "http://www.espn.com/mens-college-basketball/scoreboard/_/date/20161211"
 r = requests.get(scores_link)
 
-driver = webdriver.Chrome("/home/kendall/Documents/Development/bball_scraping/chromedriver")
+driver = webdriver.Chrome("/home/kendall/Development/bball_scraping/chromedriver")
 driver.get(scores_link)
 
 # pdb.set_trace()

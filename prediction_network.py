@@ -12,8 +12,8 @@ batch_size = 10
 display_step = 5
 
 n_input = 22
-n_steps = 200
-n_hidden = 175
+n_steps = 175
+n_hidden = 500
 n_classes = 1
 n_predictions = 30
 n_regression_points = 0
@@ -28,7 +28,7 @@ biases = {
     'out': tf.Variable(tf.random_normal([n_classes]))
 }
 
-single_game_data = np.genfromtxt("./ncaa_data/BYU_USC.csv", delimiter=",")
+single_game_data = np.genfromtxt("./ncaa_data/Hofstra_Kentucky.csv", delimiter=",")
 prediction_data = single_game_data[0:n_steps,:].reshape((1,n_steps,n_input))
 
 def RNN(x, weights, biases):
@@ -51,6 +51,6 @@ saver = tf.train.Saver()
 # Launch the graph
 with tf.Session() as sess:
     sess.run(init)
-    saver.restore(sess, "./lstm_models/200/lstm_model_n_steps_200_10000_0.78435935711.ckpt")
+    saver.restore(sess, "./lstm_models/200/lstm_model_n_steps_175_4500_0.807734028939_1.3577159583_-1.4186952694.ckpt")
     pred_val = sess.run(pred, feed_dict={x: prediction_data})
     print "Prediction = " + str(pred_val)

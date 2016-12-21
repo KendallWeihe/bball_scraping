@@ -1,6 +1,0 @@
-model_checkpoint_path: "lstm_model_n_steps_115_10000_0.564058073798.ckpt"
-all_model_checkpoint_paths: "lstm_model_n_steps_115_9000_0.564567677824.ckpt"
-all_model_checkpoint_paths: "lstm_model_n_steps_115_9250_0.564226979324.ckpt"
-all_model_checkpoint_paths: "lstm_model_n_steps_115_9500_0.564111382906.ckpt"
-all_model_checkpoint_paths: "lstm_model_n_steps_115_9750_0.564364164239.ckpt"
-all_model_checkpoint_paths: "lstm_model_n_steps_115_10000_0.564058073798.ckpt"

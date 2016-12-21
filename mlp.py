@@ -17,12 +17,11 @@ n_regression_points = 0
 # Network Parameters
 n_input = 22 # MNIST data input (img shape: 28*28)
 # max_size = 400
-n_steps = 115 # timesteps
 n_classes = 1 # MNIST total classes (0-9 digits)
-n_hidden_1 = 10 # 1st layer number of features
-n_hidden_2 = 10 # 2nd layer number of features
+n_hidden_1 = 100 # 1st layer number of features
+n_hidden_2 = 100 # 2nd layer number of features
 
-x = tf.placeholder("float", [None, n_steps, n_input])
+x = tf.placeholder("float", [None, n_input])
 y = tf.placeholder("float", [None, n_classes])
 
 def input_data():
@@ -34,14 +33,20 @@ def input_data():
     scores = []
     for csv_file in files:
         csv_data = np.genfromtxt(csv_file, delimiter=",")
-        if csv_data.shape[0] > n_steps:
-            input_data.append(csv_data[0:n_steps,:])
-            ground_truth.append(csv_data[csv_data.shape[0]-1,2] - csv_data[csv_data.shape[0]-1,3])
-            scores.append(csv_data[n_steps,2] - csv_data[n_steps,3])
+        for i in range(csv_data.shape[0]):
+            if csv_data[i,0] == 19:
+                input_data.append(csv_data[i,:])
+                ground_truth.append(csv_data[csv_data.shape[0]-1,2] - csv_data[csv_data.shape[0]-1,3])
+                scores.append(csv_data[i,2] - csv_data[i,3])
 
     return np.array(input_data), np.array(ground_truth), np.array(scores)
 
 input_data, ground_truth, scores = input_data()
+randomize = np.arange(len(input_data))
+np.random.shuffle(randomize)
+input_data = input_data[randomize]
+ground_truth = ground_truth[randomize]
+
 training_data = input_data[0:input_data.shape[0] - n_predictions - n_regression_points, :]
 training_ground_truth = ground_truth[0:ground_truth.shape[0] - n_predictions - n_regression_points]
 prediction_data = input_data[input_data.shape[0] - n_predictions - n_regression_points:input_data.shape[0] - n_regression_points, :]
@@ -51,7 +56,7 @@ regression_ground_truth = ground_truth[ground_truth.shape[0] - n_regression_poin
 
 # Create model
 def multilayer_perceptron(x, weights, biases):
-    x = tf.reshape(x, [-1, n_steps * n_input])
+    x = tf.reshape(x, [-1, n_input])
     # Hidden layer with RELU activation
     layer_1 = tf.add(tf.matmul(x, weights['h1']), biases['b1'])
     layer_1 = tf.nn.softmax(layer_1)
@@ -65,14 +70,19 @@ def multilayer_perceptron(x, weights, biases):
 
 # Store layers weight & bias
 weights = {
-    'h1': tf.Variable(tf.random_normal([n_steps * n_input, n_hidden_1])),
-    'h2': tf.Variable(tf.random_normal([n_hidden_1, n_hidden_2])),
-    'out': tf.Variable(tf.random_normal([n_hidden_2, n_classes]))
+    'h1' : tf.get_variable("weights_1", shape=[n_input, n_hidden_1],
+               initializer=tf.contrib.layers.xavier_initializer(), dtype=tf.float32),
+
+    'h2' : tf.get_variable("weights_2", shape=[n_hidden_1, n_hidden_2],
+               initializer=tf.contrib.layers.xavier_initializer(), dtype=tf.float32),
+
+    'out' : tf.get_variable("weights_3", shape=[n_hidden_2, n_classes],
+               initializer=tf.contrib.layers.xavier_initializer(), dtype=tf.float32),
 }
 biases = {
-    'b1': tf.Variable(tf.random_normal([n_hidden_1])),
-    'b2': tf.Variable(tf.random_normal([n_hidden_2])),
-    'out': tf.Variable(tf.random_normal([n_classes]))
+    'b1': tf.Variable(tf.zeros([n_hidden_1])),
+    'b2': tf.Variable(tf.zeros([n_hidden_2])),
+    'out': tf.Variable(tf.zeros([n_classes]))
 }
 
 pred = multilayer_perceptron(x, weights, biases)
@@ -90,23 +100,27 @@ with tf.Session() as sess:
     avg_pred_diff = []
     avg_pred_vals = []
     avg_reg_vals = []
-    for j in range(10000):
+    max_r_values = [0,0,0]
+    accuracy_data = []
+    for step in range(10000):
 
         start_pos = np.random.randint(len(training_data) - batch_size)
-        batch_x = training_data[start_pos:start_pos+batch_size].reshape((batch_size, n_steps, n_input))
+        batch_x = training_data[start_pos:start_pos+batch_size].reshape((batch_size, n_input))
         batch_y = training_ground_truth[start_pos:start_pos+batch_size].reshape((batch_size,n_classes))
         sess.run(optimizer, feed_dict={x: batch_x, y: batch_y})
 
         acc = sess.run(accuracy, feed_dict={x: batch_x, y: batch_y})
+        accuracy_data.append(np.mean(acc))
         loss = sess.run(cost, feed_dict={x: batch_x, y: batch_y})
         # print "Step: " + str(step) + "  Accuracy: " + str(acc[0][0]) + "  Loss: " + str(loss)
 
         # if step % 50 == 0:
         pred_vals = []
         for i in range(prediction_data.shape[0]):
-            pred_val = sess.run(pred, feed_dict={x: prediction_data[i].reshape((1,n_steps,n_input))})
-            pred_vals.append(pred_val[0][0])
-            avg_pred_diff.append(pred_val[0][0]-prediction_ground_truth[i])
+            pred_val = sess.run(pred, feed_dict={x: prediction_data[i].reshape((1,n_input))})
+            # pdb.set_trace()
+            pred_vals.append(int(pred_val))
+            avg_pred_diff.append(int(pred_val)-prediction_ground_truth[i])
             # print "Prediction = " + str(pred_val[0][0]) + "  Actual = " + str(prediction_ground_truth[i])
         # print "Prediction average = " + str(np.mean(np.abs(np.array(avg_pred_diff))))
 
@@ -114,11 +128,15 @@ with tf.Session() as sess:
         # print "Slope = " + str(slope)
         # print "R^2 = " + str(r_value**2)
 
-        if step % 50 == 0 and step < 750:
-            print "Step = " + str(step)
+        # if step % 25 == 0:
+        print "Step: " + str(step) + "  Mean Accuracy: " + str(np.mean(accuracy_data)) + "  Loss: " + str(loss)
 
-        if step > 750:
+        # if step > 750 and r_value**2 > 0.63 and r_value**2 > np.min(np.array(max_r_values)):
+        # if step > 750 and r_value**2 > 0.5:
+        if step > 500:
             print "Step = " + str(step)
+            print "Accuracy = " + str(np.mean(acc))
+
             avg_pred_vals.append(pred_vals)
             avg_pred_vals_np = np.array(avg_pred_vals)
             avg_vals = []
@@ -133,34 +151,47 @@ with tf.Session() as sess:
             print "Slope after average = " + str(slope)
             print "R^2 after average = " + str(r_value**2)
             print "Intercept after average = " + str(intercept)
+            max_r_values.append(r_value**2)
+            if len(max_r_values) > 8:
+                del max_r_values[np.where(np.array(max_r_values) == np.min(np.array(max_r_values)))[0][0]]
 
             print "Actual prediction values --------------------------------------------"
             for i in range(len(avg_vals)):
                 actual_value = slope * avg_vals[i] + intercept
                 print str(actual_value) + "," + str(prediction_ground_truth[i])
 
-            pred_vals = []
-            for i in range(regression_data.shape[0]):
-                pred_val = sess.run(pred, feed_dict={x: regression_data[i].reshape((1, n_steps, n_input))})
-                pred_vals.append(pred_val[0][0])
-            avg_reg_vals.append(pred_vals)
-            avg_vals = []
-            print "Regression data --------------------------------------------------------"
-            for i in range(len(pred_vals)):
-                avg_vals.append(np.mean(np.array(avg_reg_vals)[:,i]))
-                # print "Average for game " + str(i) + " = " + str(avg_vals[i]) + " Actual = " + str(regression_ground_truth[i])
-                print str(avg_vals[i]) + "," + str(regression_ground_truth[i])
-            slope, intercept, r_value, p_value, std_err = linregress(np.array(avg_vals), regression_ground_truth)
-            print "Slope after average = " + str(slope)
-            print "R^2 after average = " + str(r_value**2)
-            print "Intercept after average = " + str(intercept)
-            print "Actual values: "
-            for i in range(len(avg_vals)):
-                actual_value = slope * avg_vals[i] + intercept
-                print str(actual_value) + "," + str(regression_ground_truth[i])
+                # linear_reg_vals = np.array([slope, intercept])
+                # filename = "./lstm_models/linear_reg_vals_" + str(step) + "_" + str(r_value**2) + ".csv"
+                # np.savetxt(filename, linear_reg_vals, delimiter=",")
+
+                # pred_vals = []
+                # for i in range(regression_data.shape[0]):
+                #     pred_val = sess.run(pred, feed_dict={x: regression_data[i].reshape((1, n_steps, n_input))})
+                #     pred_vals.append(pred_val[0][0])
+                # avg_reg_vals.append(pred_vals)
+                # avg_vals = []
+                # print "Regression data --------------------------------------------------------"
+                # for i in range(len(pred_vals)):
+                #     avg_vals.append(np.mean(np.array(avg_reg_vals)[:,i]))
+                #     # print "Average for game " + str(i) + " = " + str(avg_vals[i]) + " Actual = " + str(regression_ground_truth[i])
+                #     print str(avg_vals[i]) + "," + str(regression_ground_truth[i])
+                # slope, intercept, r_value, p_value, std_err = linregress(np.array(avg_vals), regression_ground_truth)
+                # print "Slope after average = " + str(slope)
+                # print "R^2 after average = " + str(r_value**2)
+                # print "Intercept after average = " + str(intercept)
+                # print "Actual regression values -------------------------------------------------- "
+                # for i in range(len(avg_vals)):
+                #     actual_value = slope * avg_vals[i] + intercept
+                #     print str(actual_value) + "," + str(regression_ground_truth[i])
 
             print "\n"
 
-        step += 1
+            step += 1
 
+            # if step % 250 == 0:
+            #     save_path = "./lstm_models/200/lstm_model_n_steps_" + str(n_steps) + "_" + str(step) + "_" + str(r_value**2) + ".ckpt"
+            #     saver.save(sess, save_path)
+            #     min_diff = np.mean(np.abs(np.array(pred_val - prediction_ground_truth)))
+    # plt.plot(accuracy_data)
+    # plt.show()
     print("Optimization Finished!")

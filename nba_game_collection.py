@@ -5,9 +5,14 @@ from bs4 import BeautifulSoup
 import re
 import datetime
 import os
+import sys
+
+if len(sys.argv) != 2:
+    print "Missing argument"
+    sys.exit(0)
 
 # scores_link = "http://www.espn.com/nba/scoreboard"
-scores_link = "http://www.espn.com/nba/scoreboard/_/date/20161203"
+scores_link = "http://www.espn.com/nba/scoreboard/_/date/20161211"
 
 r = requests.get(scores_link)
 soup = BeautifulSoup(r.text, "html.parser")
@@ -91,5 +96,5 @@ while 1:
                 started_games.append(i)
                 adjusted_teams[i][0] = adjusted_teams[i][0].replace(" ", "_")
                 adjusted_teams[i][1] = adjusted_teams[i][1].replace(" ", "_")
-                command = "python nba_stat_collection.py " + str(game_links[i]) + " " + str(adjusted_teams[i][0]) + "_" + str(adjusted_teams[i][1]) + " &"
+                command = "python nba_stat_collection.py " + str(game_links[i]) + " " + str(adjusted_teams[i][0]) + "_" + str(adjusted_teams[i][1]) + " " + sys.argv[1] + " &"
                 os.system(command)

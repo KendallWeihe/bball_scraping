@@ -1,2 +1,4 @@
 nba_data/
 ncaa_data/
+before_game_pred/stats/
+lstm_models/

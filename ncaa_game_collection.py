@@ -6,14 +6,18 @@ import re
 import datetime
 import os
 from selenium import webdriver
+import sys
 import time
 
+if len(sys.argv) != 2:
+    print "Missing argument"
+    sys.exit(0)
 
-# scores_link = "http://www.espn.com/mens-college-basketball/scoreboard"
-scores_link = "http://www.espn.com/mens-college-basketball/scoreboard/_/date/20161204"
+#scores_link = "http://www.espn.com/mens-college-basketball/scoreboard"
+scores_link = "http://www.espn.com/mens-college-basketball/scoreboard/_/date/20161221"
 r = requests.get(scores_link)
 
-driver = webdriver.Chrome("/home/kendall/Documents/Development/bball_scraping/chromedriver")
+driver = webdriver.Chrome("/home/kendall/Development/bball_scraping/chromedriver")
 driver.get(scores_link)
 
 time.sleep(1)
@@ -100,5 +104,5 @@ while 1:
                 started_games.append(i)
                 teams[i][0].replace(" ", "_")
                 teams[i][1].replace(" ", "_")
-                command = "python ncaa_stat_collection.py " + str(game_links[i]) + " " + str(teams[i][0]) + "_" + str(teams[i][1]) + " &"
+                command = "python ncaa_stat_collection.py " + str(game_links[i]) + " " + str(teams[i][0]) + "_" + str(teams[i][1]) + " " + sys.argv[1] + " &"
                 os.system(command)

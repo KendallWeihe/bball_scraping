@@ -5,13 +5,17 @@ import pdb
 import csv
 import sys
 
+if len(sys.argv) != 2:
+    print "Missing argument"
+    sys.exit(0)
+
 team_hash_table = []
 with open('team_hash_table.csv', 'rb') as f:
     reader = csv.reader(f)
     for row in reader:
         team_hash_table.append(row)
 
-link = "https://www.teamrankings.com/ncb/schedules/?date=2016-12-04"
+link = "https://www.teamrankings.com/ncb/schedules/?date=2016-12-23"
 r = requests.get(link)
 soup = BeautifulSoup(r.text, "html.parser")
 
