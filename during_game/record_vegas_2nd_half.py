@@ -13,11 +13,6 @@ import time
     # team_2
     # date
 
-# TODO:
-    # loop until spreads found or 20 minutes has passed
-    # sleep a minute for each loop
-    # change name to sys.argv[1]
-
 link = "http://www.covers.com/odds/basketball/college-basketball-2nd-half-lines.aspx"
 
 time_count = 0
@@ -34,8 +29,8 @@ while time_count < 20:
         team_names.append(re.sub(r"\r?\n?", "", str(td[0].text)).split("@")[0])
         team_names.append(re.sub(r"\r?\n?", "", str(td[0].text)).split("@")[1])
 
-    if difflib.get_close_matches('Iona', team_names, n=1):
-        team_index = np.argwhere(np.array(team_names) == difflib.get_close_matches('Iona', team_names, n=1))[0,0]
+    if difflib.get_close_matches(sys.argv[1], team_names, n=1):
+        team_index = np.argwhere(np.array(team_names) == difflib.get_close_matches(sys.argv[1], team_names, n=1))[0,0]
         actual_team_index = float(team_index)/2
         team_index = int(math.floor(team_index/2))
     else:

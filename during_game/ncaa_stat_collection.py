@@ -5,12 +5,18 @@ from bs4 import BeautifulSoup
 import re
 import sys
 import time
+import os
 
+# ARGV:
+#     game link
+#     team 1
+#     team 2
+#     date
 
-# link = "http://www.espn.com/nba/matchup?gameId=400899645"
 link = sys.argv[1]
 over = False
 output_table = []
+record_vegas_2nd_half = False
 
 while not over:
 
@@ -23,6 +29,17 @@ while not over:
     # pdb.set_trace()
     if game_time == "Final/OT" or game_time == "Final":
         over = True
+
+    elif game_time == "Halftime" and record_vegas_2nd_half == False:
+        os.system("python record_vegas_2nd_half.py " + sys.argv[2] + " " + sys.argv[3] + " " + sys.argv[4] + " &")
+        record_vegas_2nd_half = True
+
+        spread_filename = "./half_time_spreads/" + sys.argv[2] + "_" + sys.argv[3] + "_" + sys.argv[4] + ".csv"
+        vegas_spread = np.genfromtxt(spread_filename, delimiter=",")
+        stats_filename = "ncaa_data/" + sys.argv[2] + "_" + sys.argv[3] + "_" + sys.argv[4] + ".csv"
+        stats = np.genfromtxt(stats_filename, delimiter=",")
+        halftime_score = np.append(vegas_spread, stats[stats.shape[0],2]-stats[stats.shape[0],3])
+        np.savetxt(spread_filename, halftime_score)
 
     elif game_time != "Halftime" and game_time != 'None':
         # pdb.set_trace()
@@ -46,7 +63,6 @@ while not over:
                 turnovers = re.findall("\d+", str(team_rows[14]))
                 personal_fouls = re.findall("\d+", str(team_rows[15]))
 
-                # pdb.set_trace()
                 current_time = re.findall("\d+:\d+", game_time)[0]
                 (minute, second) = current_time.split(":")
                 if re.findall("nd", game_time) != []:
@@ -59,7 +75,7 @@ while not over:
                 row = row.flatten()
                 output_table.append(row)
 
-                filename = "ncaa_data/" + sys.argv[2] + ".csv"
+                filename = "ncaa_data/" + sys.argv[2] + "_" + sys.argv[3] + "_" + sys.argv[4] + ".csv"
                 np.savetxt(filename, np.array(output_table), delimiter=",")
 
             except:
@@ -67,5 +83,12 @@ while not over:
 
     time.sleep(20)
 
-filename = "ncaa_data/" + sys.argv[2] + "_" + sys.argv[3] + ".csv"
+filename = "ncaa_data/" + sys.argv[2] + "_" + sys.argv[3] + "_" + sys.argv[4] + ".csv"
 np.savetxt(filename, np.array(output_table), delimiter=",")
+
+spread_filename = "./half_time_spreads/" + sys.argv[2] + "_" + sys.argv[3] + "_" + sys.argv[4] + ".csv"
+vegas_spread = np.genfromtxt(spread_filename, delimiter=",")
+stats_filename = "ncaa_data/" + sys.argv[2] + "_" + sys.argv[3] + "_" + sys.argv[4] + ".csv"
+stats = np.genfromtxt(stats_filename, delimiter=",")
+final_spread = np.append(vegas_spread, stats[stats.shape[0],2]-stats[stats.shape[0],3])
+np.savetxt(spread_filename, final_spread)
