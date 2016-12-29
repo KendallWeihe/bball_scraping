@@ -2,6 +2,5 @@ during_game/nba_data/
 during_game/ncaa_data/
 before_game_pred/stats/
 lstm_models/
-chromedriver
 during_game/half_time_spreads/
 during_game/2H_comparison.csv

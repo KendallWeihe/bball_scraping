@@ -14,12 +14,12 @@ prediction_game = np.genfromtxt("./ncaa_data/" + sys.argv[1], delimiter=",")
 for i in range(prediction_game.shape[0]):
     if prediction_game[i,0] > 19:
         n_steps = i
+        halftime_spread = prediction_game[i,2] - prediction_game[i,3]
         break
+prediction_game = prediction_game[0:n_steps,:]
 
-halftime_spread = np.genfromtxt("./half_time_spreads/" + sys.argv[1], delimiter=",")
-pdb.set_trace()
+second_half = np.genfromtxt("./half_time_spreads/" + sys.argv[1], delimiter=",")
 
-pdb.set_trace()
 learning_rate = 0.001
 training_iters = 100000
 batch_size = 50
@@ -52,7 +52,7 @@ def input_data():
     ground_truth = []
     scores = []
     for csv_file in files:
-        if csv_file != sys.argv[1]:
+        if csv_file != "./ncaa_data/" + sys.argv[1]:
             try:
                 csv_data = np.genfromtxt(csv_file, delimiter=",")
                 if csv_data.shape[0] > n_steps:
@@ -120,8 +120,6 @@ with tf.Session() as sess:
         print "Step: " + str(step) + "  Mean Accuracy: " + str(np.mean(accuracy_data)) + "  Loss: " + str(loss)
 
         if step > 250:
-            print "Step = " + str(step)
-            print "Accuracy = " + str(np.mean(acc))
 
             pred_vals = []
             for i in range(prediction_data.shape[0]):
@@ -140,7 +138,7 @@ with tf.Session() as sess:
             for i in range(avg_pred_vals_np.shape[1]):
                 avg_vals.append(np.mean(avg_pred_vals_np[:,i]))
                 print str(np.mean(avg_pred_vals_np[:,i])) + "," + str(prediction_ground_truth[i])
-                # print "Average for game " + str(i) + " = " + str(np.mean(avg_pred_vals_np[:,i])) + "  Actual = " + str(prediction_ground_truth[i])
+                print "Average for game " + str(i) + " = " + str(np.mean(avg_pred_vals_np[:,i])) + "  Actual = " + str(prediction_ground_truth[i])
             print "Slope before average = " + str(slope)
             print "R^2 before average = " + str(r_value**2)
 
@@ -173,7 +171,7 @@ with tf.Session() as sess:
             #     saver.save(sess, save_path)
             #     min_diff = np.mean(np.abs(np.array(pred_val - prediction_ground_truth)))
 
-    results = np.append(halftime_spread, actual_pred)
+    results = np.append(second_half, actual_pred - halftime_spread)
     all_comparisons = np.genfromtxt("./2H_comparison.csv", delimiter=",")
     all_comparisons = np.append(all_comparisons, results)
     np.savetxt("./2H_comparison.csv", all_comparisons, delimiter=",")
