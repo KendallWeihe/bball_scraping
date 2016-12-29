@@ -46,8 +46,11 @@ while time_count < 20:
             spreads.append(re.findall("[-+]?\d+[\.]?\d*[eE]?[-+]?\d*", str(td[i].text)))
 
     if spreads != []:
-        spreads = np.array(spreads)[:,1]
-        avg_spread = np.mean(spreads.astype(float))
+        try:
+            spreads = np.array(spreads)[:,1]
+            avg_spread = np.mean(spreads.astype(float))
+        except:
+            spreads = np.array(spreads)
         if actual_team_index % 1 != 0:
             my_spread = avg_spread * -1
         else:
