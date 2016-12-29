@@ -33,13 +33,15 @@ while not over:
     elif game_time == "Halftime" and record_vegas_2nd_half == False:
         os.system("python record_vegas_2nd_half.py " + sys.argv[2] + " " + sys.argv[3] + " " + sys.argv[4] + " &")
         record_vegas_2nd_half = True
-
-        spread_filename = "./half_time_spreads/" + sys.argv[2] + "_" + sys.argv[3] + "_" + sys.argv[4] + ".csv"
-        vegas_spread = np.genfromtxt(spread_filename, delimiter=",")
-        stats_filename = "ncaa_data/" + sys.argv[2] + "_" + sys.argv[3] + "_" + sys.argv[4] + ".csv"
-        stats = np.genfromtxt(stats_filename, delimiter=",")
-        halftime_score = np.append(vegas_spread, stats[stats.shape[0],2]-stats[stats.shape[0],3])
-        np.savetxt(spread_filename, halftime_score)
+        try:
+            spread_filename = "./half_time_spreads/" + sys.argv[2] + "_" + sys.argv[3] + "_" + sys.argv[4] + ".csv"
+            vegas_spread = np.genfromtxt(spread_filename, delimiter=",")
+            stats_filename = "ncaa_data/" + sys.argv[2] + "_" + sys.argv[3] + "_" + sys.argv[4] + ".csv"
+            stats = np.genfromtxt(stats_filename, delimiter=",")
+            halftime_score = np.append(vegas_spread, stats[stats.shape[0],2]-stats[stats.shape[0],3])
+            np.savetxt(spread_filename, halftime_score)
+        except:
+            print "Vegas spread not found: " + sys.argv[2] + " " + sys.argv[3]
 
     elif game_time != "Halftime" and game_time != 'None':
         # pdb.set_trace()
@@ -86,9 +88,12 @@ while not over:
 filename = "ncaa_data/" + sys.argv[2] + "_" + sys.argv[3] + "_" + sys.argv[4] + ".csv"
 np.savetxt(filename, np.array(output_table), delimiter=",")
 
-spread_filename = "./half_time_spreads/" + sys.argv[2] + "_" + sys.argv[3] + "_" + sys.argv[4] + ".csv"
-vegas_spread = np.genfromtxt(spread_filename, delimiter=",")
-stats_filename = "ncaa_data/" + sys.argv[2] + "_" + sys.argv[3] + "_" + sys.argv[4] + ".csv"
-stats = np.genfromtxt(stats_filename, delimiter=",")
-final_spread = np.append(vegas_spread, stats[stats.shape[0],2]-stats[stats.shape[0],3])
-np.savetxt(spread_filename, final_spread)
+try:
+    spread_filename = "./half_time_spreads/" + sys.argv[2] + "_" + sys.argv[3] + "_" + sys.argv[4] + ".csv"
+    vegas_spread = np.genfromtxt(spread_filename, delimiter=",")
+    stats_filename = "ncaa_data/" + sys.argv[2] + "_" + sys.argv[3] + "_" + sys.argv[4] + ".csv"
+    stats = np.genfromtxt(stats_filename, delimiter=",")
+    final_spread = np.append(vegas_spread, stats[stats.shape[0],2]-stats[stats.shape[0],3])
+    np.savetxt(spread_filename, final_spread)
+except:
+    print "Vegas spread not found: " + sys.argv[2] + " " + sys.argv[3]
