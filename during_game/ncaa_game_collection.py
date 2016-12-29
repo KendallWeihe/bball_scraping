@@ -17,7 +17,7 @@ if len(sys.argv) != 2:
 scores_link = "http://www.espn.com/mens-college-basketball/scoreboard/_/date/20161221"
 r = requests.get(scores_link)
 
-driver = webdriver.Chrome("/home/kendall/Development/bball_scraping/chromedriver")
+driver = webdriver.Chrome("/home/kendall/tmp/bball_scraping/chromedriver")
 driver.get(scores_link)
 
 time.sleep(1)
