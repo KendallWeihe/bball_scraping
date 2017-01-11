@@ -3,7 +3,7 @@ import pdb
 import math
 import glob
 
-data = np.genfromtxt("temp.csv", delimiter=",")
+data = np.genfromtxt("regression.csv", delimiter=",")
 
 # pdb.set_trace()
 

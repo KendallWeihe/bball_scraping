@@ -6,20 +6,13 @@ import glob
 import matplotlib.pyplot as plt
 from scipy.stats import linregress
 
-prediction_game = np.genfromtxt("./ncaa_data/Northeastern_Michigan_State.csv", delimiter=",")[0:n_steps,:]
-for i in range(prediction_game.shape[0]):
-    if prediction_game[i,0] > 19:
-        n_steps = i
-        break
-
-pdb.set_trace()
 learning_rate = 0.001
 training_iters = 100000
 batch_size = 50
 display_step = 5
 
 n_input = 22
-# n_steps = 175
+n_steps = 175
 n_hidden = 500
 n_classes = 1
 n_predictions = 50
@@ -28,7 +21,9 @@ x = tf.placeholder("float", [None, n_steps, n_input])
 y = tf.placeholder("float", [None, n_classes])
 
 weights = {
-    'all_out' : tf.get_variable("weights_1", shape=[n_steps*n_hidden, n_classes],
+    # 'all_out' : tf.get_variable("weights_1", shape=[n_steps*n_hidden, n_classes],
+    #            initializer=tf.contrib.layers.xavier_initializer(), dtype=tf.float32),
+    'out' : tf.get_variable("weights_1", shape=[n_hidden, n_classes],
                initializer=tf.contrib.layers.xavier_initializer(), dtype=tf.float32),
 }
 
@@ -74,8 +69,8 @@ def RNN(x, weights, biases):
     lstm_cell = rnn_cell.BasicLSTMCell(n_hidden, forget_bias=1.0)
     outputs, states = rnn.rnn(lstm_cell, x, dtype=tf.float32)
     all_lstm_outputs = tf.reshape(tf.stack(outputs, axis=1), [-1, n_steps*n_hidden])
-    # output = tf.matmul(outputs[-1], weights['out']) + biases['out']
-    output = tf.matmul(all_lstm_outputs, weights['all_out']) + biases['out']
+    output = tf.matmul(outputs[-1], weights['out']) + biases['out']
+    # output = tf.matmul(all_lstm_outputs, weights['all_out']) + biases['out']
     return tf.nn.dropout(output, 0.75)
 
 pred = RNN(x, weights, biases)
