@@ -60,18 +60,18 @@ def find2H(link, teams1, teams2):
     r = requests.get(link)
 
     driver = webdriver.Chrome("/home/kendall/Development/bball_scraping/during_game/chromedriver")
-    driver.get(link)
-
-    time.sleep(.3)
-    driver.find_element_by_css_selector("#scoreboard-page header .dropdown-type-group button").click()
-    time.sleep(.3)
-    driver.find_element_by_link_text('NCAA Division I').click()
-    time.sleep(.3)
-
-    soup = BeautifulSoup(driver.page_source)
-    games = soup.find("div", {"id": "events"})
-
     try:
+        driver.get(link)
+
+        time.sleep(.3)
+        driver.find_element_by_css_selector("#scoreboard-page header .dropdown-type-group button").click()
+        time.sleep(.3)
+        driver.find_element_by_link_text('NCAA Division I').click()
+        time.sleep(.3)
+
+        soup = BeautifulSoup(driver.page_source)
+        games = soup.find("div", {"id": "events"})
+
         for game in games:
             team1 = str(game.find_all("span", {"class": "sb-team-short"})[0].string.encode('utf-8'))
             team2 = str(game.find_all("span", {"class": "sb-team-short"})[1].string.encode('utf-8'))
@@ -120,7 +120,7 @@ for spreadFile in halfTimeSpreads:
                 if predictionGame[i,0] > 19:
                     n_steps = i
                     break
-            predictionGame = predictionGame[n_steps,:]
+            predictionGame = predictionGame[0:n_steps,:]
 
             learning_rate = 0.001
             training_iters = 100000
@@ -255,9 +255,9 @@ for spreadFile in halfTimeSpreads:
                         # print "Actual prediction values --------------------------------------------"
                         for i in range(len(avg_vals)):
                             actual_value = slope * avg_vals[i] + intercept
-                            print str(actual_value) + "," + str(prediction_ground_truth[i])
-
-                        print "\n"
+                        #     print str(actual_value) + "," + str(prediction_ground_truth[i])
+                        #
+                        # print "\n"
 
                         step += 1
 
@@ -271,15 +271,23 @@ for spreadFile in halfTimeSpreads:
 
             myPrediction = myPrediction * -1
             if (actualSecondHalfSpread > vegas2HSpread and myPrediction > vegas2HSpread) or (actualSecondHalfSpread < vegas2HSpread and myPrediction < vegas2HSpread):
-                comparisons = np.genfromttxt("./ComparisonsMine.csv", delimiter=",")
-                comparisons.append([vegas2HSpread, actualSecondHalfSpread, myPrediction, 1])
+                comparisons = np.genfromtxt("./ComparisonsMine.csv", delimiter=",")
+                if comparisons.size == 0:
+                    comparisons = np.array([[vegas2HSpread, actualSecondHalfSpread, myPrediction, 1]])
+                else:
+                    comparisons = np.vstack((comparisons, [vegas2HSpread, actualSecondHalfSpread, myPrediction, 1]))
                 np.savetxt("./ComparisonsMine.csv", comparisons, delimiter=",")
                 print str(vegas2HSpread) + "," + str(actualSecondHalfSpread) + "," + str(myPrediction) + ",1"
             else:
-                comparisons = np.genfromttxt("./ComparisonsMine.csv", delimiter=",")
-                comparisons.append([vegas2HSpread, actualSecondHalfSpread, myPrediction, 0])
+                comparisons = np.genfromtxt("./ComparisonsMine.csv", delimiter=",")
+                if comparisons.size == 0:
+                    comparisons = np.array([[vegas2HSpread, actualSecondHalfSpread, myPrediction, 0]])
+                else:
+                    comparisons = np.vstack((comparisons, [vegas2HSpread, actualSecondHalfSpread, myPrediction, 0]))
                 np.savetxt("./ComparisonsMine.csv", comparisons, delimiter=",")
                 print str(vegas2HSpread) + "," + str(actualSecondHalfSpread) + "," + str(myPrediction) + ",0"
+            tf.reset_default_graph()
+
 
     except:
-        pass
+        print "Error: " + spreadFile
