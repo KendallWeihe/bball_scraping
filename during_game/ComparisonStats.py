@@ -46,3 +46,14 @@ for i in range(data.shape[0]):
 
 print " > 12 ==> " + str(float(correct_count)/float(overall_count))
 print "Number of games > 12 ==> " + str(overall_count)
+
+correct_count = 0
+overall_count = 0
+for i in range(data.shape[0]):
+    if math.fabs(data[i,0] - data[i,2]) > 15:
+        if data[i,3] == 1:
+            correct_count = correct_count + 1
+        overall_count = overall_count + 1
+
+print " > 15 ==> " + str(float(correct_count)/float(overall_count))
+print "Number of games > 15 ==> " + str(overall_count)
