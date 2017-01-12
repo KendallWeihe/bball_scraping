@@ -155,14 +155,15 @@ for spreadFile in halfTimeSpreads:
                 ground_truth = []
                 scores = []
                 for csv_file in files:
-                    try:
-                        csv_data = np.genfromtxt(csv_file, delimiter=",")
-                        if csv_data.shape[0] > n_steps:
-                            input_data.append(csv_data[0:n_steps,:])
-                            ground_truth.append(csv_data[csv_data.shape[0]-1,2] - csv_data[csv_data.shape[0]-1,3])
-                            scores.append(csv_data[n_steps,2] - csv_data[n_steps,3])
-                    except:
-                        print csv_file
+                    if csv_file != "./ncaa_data/completed_games/" + spreadFile:
+                        try:
+                            csv_data = np.genfromtxt(csv_file, delimiter=",")
+                            if csv_data.shape[0] > n_steps:
+                                input_data.append(csv_data[0:n_steps,:])
+                                ground_truth.append(csv_data[csv_data.shape[0]-1,2] - csv_data[csv_data.shape[0]-1,3])
+                                scores.append(csv_data[n_steps,2] - csv_data[n_steps,3])
+                        except:
+                            print csv_file
 
                 return np.array(input_data), np.array(ground_truth), np.array(scores)
 
