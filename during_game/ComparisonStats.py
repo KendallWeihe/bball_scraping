@@ -3,6 +3,10 @@ import math
 
 data = np.genfromtxt("./ComparisonsMine.csv", delimiter=",")
 
+temp = data[:,3]
+print "Overall accuracy ==> " + str(float(len(temp[temp > 0]))/float(data.shape[0]))
+print "Total number of games ==> " + str(data.shape[0])
+
 correct_count = 0
 overall_count = 0
 for i in range(data.shape[0]):
@@ -11,7 +15,7 @@ for i in range(data.shape[0]):
             correct_count = correct_count + 1
         overall_count = overall_count + 1
 
-print " > 3 ==> " + str(float(correct_count)/float(overall_count))
+print "Accuracy > 3 ==> " + str(float(correct_count)/float(overall_count))
 print "Number of games > 3 ==> " + str(overall_count)
 
 correct_count = 0
@@ -22,7 +26,7 @@ for i in range(data.shape[0]):
             correct_count = correct_count + 1
         overall_count = overall_count + 1
 
-print " > 5 ==> " + str(float(correct_count)/float(overall_count))
+print "Accuracy > 5 ==> " + str(float(correct_count)/float(overall_count))
 print "Number of games > 5 ==> " + str(overall_count)
 
 correct_count = 0
@@ -33,7 +37,7 @@ for i in range(data.shape[0]):
             correct_count = correct_count + 1
         overall_count = overall_count + 1
 
-print " > 8 ==> " + str(float(correct_count)/float(overall_count))
+print "Accuracy > 8 ==> " + str(float(correct_count)/float(overall_count))
 print "Number of games > 8 ==> " + str(overall_count)
 
 correct_count = 0
@@ -44,7 +48,7 @@ for i in range(data.shape[0]):
             correct_count = correct_count + 1
         overall_count = overall_count + 1
 
-print " > 12 ==> " + str(float(correct_count)/float(overall_count))
+print "Accuracy > 12 ==> " + str(float(correct_count)/float(overall_count))
 print "Number of games > 12 ==> " + str(overall_count)
 
 correct_count = 0
@@ -55,5 +59,5 @@ for i in range(data.shape[0]):
             correct_count = correct_count + 1
         overall_count = overall_count + 1
 
-print " > 15 ==> " + str(float(correct_count)/float(overall_count))
+print "Accuracy > 15 ==> " + str(float(correct_count)/float(overall_count))
 print "Number of games > 15 ==> " + str(overall_count)

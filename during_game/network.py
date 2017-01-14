@@ -6,13 +6,17 @@ import glob
 import matplotlib.pyplot as plt
 from scipy.stats import linregress
 
+predictionFile = "Auburn_Kentucky_170114.csv"
+predictionGame = np.genfromtxt("./ncaa_data/" + predictionFile, delimiter=",")
+n_steps = predictionGame.shape[0]
+
 learning_rate = 0.001
 training_iters = 100000
 batch_size = 50
 display_step = 5
 
 n_input = 22
-n_steps = 175
+# n_steps = 175
 n_hidden = 500
 n_classes = 1
 n_predictions = 50
@@ -42,7 +46,7 @@ def input_data():
     for csv_file in files:
         try:
             csv_data = np.genfromtxt(csv_file, delimiter=",")
-            if csv_data.shape[0] > n_steps:
+            if csv_data.shape[0] > n_steps and csv_file != "./ncaa_data/" + predictionFile:
                 input_data.append(csv_data[0:n_steps,:])
                 ground_truth.append(csv_data[csv_data.shape[0]-1,2] - csv_data[csv_data.shape[0]-1,3])
                 scores.append(csv_data[n_steps,2] - csv_data[n_steps,3])
@@ -52,6 +56,8 @@ def input_data():
     return np.array(input_data), np.array(ground_truth), np.array(scores)
 
 input_data, ground_truth, scores = input_data()
+for i in range(input_data.shape[2]):
+    input_data[:,:,i] = (input_data[:,:,i] - np.min(input_data[:,:,i])) / (np.amax(input_data[:,:,i]) - np.min(input_data[:,:,i]))
 randomize = np.arange(len(input_data))
 np.random.shuffle(randomize)
 input_data = input_data[randomize]
@@ -106,7 +112,7 @@ with tf.Session() as sess:
         print "Step: " + str(step) + "  Accuracy: " + str(acc[0][0]) + "  Loss: " + str(loss)
         print "Step: " + str(step) + "  Mean Accuracy: " + str(np.mean(accuracy_data)) + "  Loss: " + str(loss)
 
-        if step > 250:
+        if step > 500:
             print "Step = " + str(step)
             print "Accuracy = " + str(np.mean(acc))
 
@@ -148,7 +154,7 @@ with tf.Session() as sess:
 
             step += 1
 
-            pred_val = sess.run(pred, feed_dict={x: prediction_game.reshape((1,n_steps,n_input))})
+            pred_val = sess.run(pred, feed_dict={x: predictionGame.reshape((1,n_steps,n_input))})
             print "Single game raw prediction = " + str(pred_val)
             single_game_pred.append(pred_val)
             print "Single game average raw prediction = " + str(np.mean(np.array(single_game_pred)))
