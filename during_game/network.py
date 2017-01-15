@@ -6,7 +6,7 @@ import glob
 import matplotlib.pyplot as plt
 from scipy.stats import linregress
 
-predictionFile = "Auburn_Kentucky_170114.csv"
+predictionFile = "Wichita_St_Illinois_State_170114.csv"
 predictionGame = np.genfromtxt("./ncaa_data/" + predictionFile, delimiter=",")
 n_steps = predictionGame.shape[0]
 
@@ -56,8 +56,9 @@ def input_data():
     return np.array(input_data), np.array(ground_truth), np.array(scores)
 
 input_data, ground_truth, scores = input_data()
-for i in range(input_data.shape[2]):
-    input_data[:,:,i] = (input_data[:,:,i] - np.min(input_data[:,:,i])) / (np.amax(input_data[:,:,i]) - np.min(input_data[:,:,i]))
+# for i in range(input_data.shape[2]):
+#     input_data[:,:,i] = (input_data[:,:,i] - np.min(input_data[:,:,i])) / (np.amax(input_data[:,:,i]) - np.min(input_data[:,:,i]))
+#     predictionGame[:,i] = (predictionGame[:,i] - np.min(input_data[:,:,i])) / (np.amax(input_data[:,:,i]) - np.min(input_data[:,:,i]))
 randomize = np.arange(len(input_data))
 np.random.shuffle(randomize)
 input_data = input_data[randomize]
