@@ -21,12 +21,13 @@ from tensorflow.python.ops import rnn, rnn_cell
 import glob
 import matplotlib.pyplot as plt
 from scipy.stats import linregress
+from pyvirtualdisplay import Display
 
 halfTimeSpreads = os.listdir("./half_time_spreads/")
 espnLinks = []
-for i in range(20161228,20161232):
+for i in range(20161229,20161232):
     espnLinks.append("http://www.espn.com/mens-college-basketball/scoreboard/_/group/50/date/" + str(i))
-for i in range(20170101,20170110):
+for i in range(20170101,20170118):
     espnLinks.append("http://www.espn.com/mens-college-basketball/scoreboard/_/group/50/date/" + str(i))
 
 def generateTeamNames(n, spreadFile):
@@ -59,6 +60,8 @@ def generateTeamNames(n, spreadFile):
 def find2H(link, teams1, teams2):
     r = requests.get(link)
 
+    display = Display(visible=0, size=(800, 600))
+    display.start()
     driver = webdriver.Chrome("/home/kendall/Development/bball_scraping/during_game/chromedriver")
     try:
         driver.get(link)
@@ -87,15 +90,21 @@ def find2H(link, teams1, teams2):
 
                 secondHalfSpread = finalSpread - halftimeSpread
                 driver.quit()
+                display.stop()
                 return secondHalfSpread
 
         driver.quit()
+        display.stop()
         return -1000
     except:
         driver.quit()
+        display.stop()
         return -1000
 
+count = 0
 for spreadFile in halfTimeSpreads:
+    print "Predicting game #" + str(count)
+    count = count + 1
     vegas2HSpread = float(np.genfromtxt("./half_time_spreads/" + spreadFile, delimiter=","))
     try:
         n = 0
@@ -106,11 +115,18 @@ for spreadFile in halfTimeSpreads:
         teams1, teams2 = generateTeamNames(n, spreadFile)
 
         spreadFound = False
-        for link in espnLinks:
-            actualSecondHalfSpread = find2H(link, teams1, teams2)
-            if actualSecondHalfSpread > -1000:
-                spreadFound = True
-                break
+        # pdb.set_trace()
+        date = spreadFile[-10:-4]
+        link = "http://www.espn.com/mens-college-basketball/scoreboard/_/date/20" + date
+        actualSecondHalfSpread = find2H(link, teams1, teams2)
+        if actualSecondHalfSpread == -1000:
+            for link in espnLinks:
+                actualSecondHalfSpread = find2H(link, teams1, teams2)
+                if actualSecondHalfSpread > -1000:
+                    spreadFound = True
+                    break
+        else:
+            spreadFound = True
 
         if spreadFound:
             actualSecondHalfSpread = actualSecondHalfSpread * -1
@@ -128,7 +144,7 @@ for spreadFile in halfTimeSpreads:
             display_step = 5
 
             n_input = 22
-            n_hidden = 500
+            n_hidden = 50
             n_classes = 1
             n_predictions = 50
 
@@ -149,7 +165,7 @@ for spreadFile in halfTimeSpreads:
 
             def input_data():
                 files = glob.glob("./ncaa_data/completed_games/*.csv")
-                print "Number of files = " + str(len(files))
+                # print "Number of files = " + str(len(files))
 
                 input_data = []
                 ground_truth = []
@@ -193,8 +209,8 @@ for spreadFile in halfTimeSpreads:
             n_samples = tf.cast(tf.shape(x)[0], tf.float32)
             cost = tf.reduce_sum(tf.pow(pred-y, 2))/(2*n_samples)
             optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
-            accuracy = tf.abs(tf.sub(pred, y))
-            init = tf.initialize_all_variables()
+            accuracy = tf.reduce_mean(tf.abs(tf.sub(pred, y)))
+            init = tf.global_variables_initializer()
 
             # Launch the graph
             with tf.Session() as sess:
@@ -207,7 +223,7 @@ for spreadFile in halfTimeSpreads:
                 accuracy_data = []
                 single_game_pred = []
 
-                for step in range(750):
+                for step in range(250):
 
                     start_pos = np.random.randint(len(training_data) - batch_size)
                     batch_x = training_data[start_pos:start_pos+batch_size].reshape((batch_size, n_steps, n_input))
@@ -217,10 +233,10 @@ for spreadFile in halfTimeSpreads:
                     acc = sess.run(accuracy, feed_dict={x: batch_x, y: batch_y})
                     accuracy_data.append(np.mean(acc))
                     loss = sess.run(cost, feed_dict={x: batch_x, y: batch_y})
-                    # print "Step: " + str(step) + "  Accuracy: " + str(acc[0][0]) + "  Loss: " + str(loss)
+                    # print "Step: " + str(step) + "  Accuracy: " + str(float(acc)) + "  Loss: " + str(loss)
                     # print "Step: " + str(step) + "  Mean Accuracy: " + str(np.mean(accuracy_data)) + "  Loss: " + str(loss)
 
-                    if step > 500:
+                    if step > 1:
                         # print "Step = " + str(step)
                         # print "Accuracy = " + str(np.mean(acc))
 

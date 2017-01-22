@@ -1,3 +1,4 @@
+before_game/hashTables
 during_game/nba_data/
 during_game/ncaa_data/
 before_game/stats/*

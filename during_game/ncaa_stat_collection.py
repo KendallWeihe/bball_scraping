@@ -42,6 +42,14 @@ while not over:
             np.savetxt(spread_filename, halftime_score)
         except:
             print "Vegas spread not found: " + sys.argv[2] + " " + sys.argv[3]
+        # TODO:
+            # call program to:
+                # open bovada
+                # find game
+                # find spread
+                # run network & predict
+                # send text message with results
+        # os.system("python CompareBovada.py " + sys.argv[2] + " " + sys.argv[3])
 
     elif game_time != "Halftime" and game_time != 'None':
         # pdb.set_trace()

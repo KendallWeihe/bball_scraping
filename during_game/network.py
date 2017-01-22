@@ -6,7 +6,7 @@ import glob
 import matplotlib.pyplot as plt
 from scipy.stats import linregress
 
-predictionFile = "Wichita_St_Illinois_State_170114.csv"
+predictionFile = "Tulsa_South_Florida_170121.csv"
 predictionGame = np.genfromtxt("./ncaa_data/" + predictionFile, delimiter=",")
 n_steps = predictionGame.shape[0]
 
@@ -17,7 +17,7 @@ display_step = 5
 
 n_input = 22
 # n_steps = 175
-n_hidden = 500
+n_hidden = 50
 n_classes = 1
 n_predictions = 50
 
@@ -84,7 +84,7 @@ pred = RNN(x, weights, biases)
 n_samples = tf.cast(tf.shape(x)[0], tf.float32)
 cost = tf.reduce_sum(tf.pow(pred-y, 2))/(2*n_samples)
 optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
-accuracy = tf.abs(tf.sub(pred, y))
+accuracy = tf.reduce_mean(tf.abs(tf.sub(pred, y)))
 init = tf.initialize_all_variables()
 saver = tf.train.Saver()
 
@@ -100,7 +100,7 @@ with tf.Session() as sess:
     max_r_values = [0,0,0]
     accuracy_data = []
     single_game_pred = []
-    for step in range(700):
+    for step in range(250):
 
         start_pos = np.random.randint(len(training_data) - batch_size)
         batch_x = training_data[start_pos:start_pos+batch_size].reshape((batch_size, n_steps, n_input))
@@ -110,10 +110,10 @@ with tf.Session() as sess:
         acc = sess.run(accuracy, feed_dict={x: batch_x, y: batch_y})
         accuracy_data.append(np.mean(acc))
         loss = sess.run(cost, feed_dict={x: batch_x, y: batch_y})
-        print "Step: " + str(step) + "  Accuracy: " + str(acc[0][0]) + "  Loss: " + str(loss)
+        print "Step: " + str(step) + "  Accuracy: " + str(acc) + "  Loss: " + str(loss)
         print "Step: " + str(step) + "  Mean Accuracy: " + str(np.mean(accuracy_data)) + "  Loss: " + str(loss)
 
-        if step > 500:
+        if step > 1:
             print "Step = " + str(step)
             print "Accuracy = " + str(np.mean(acc))
 

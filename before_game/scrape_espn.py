@@ -7,30 +7,22 @@ import time
 import csv
 import sys
 
+# ARGV:
+    # w_out_score filename
+    # date
+
 team_hash_table = []
-with open('team_hash_table.csv', 'rb') as f:
+with open("./team_hash_table.csv", 'rb') as f:
     reader = csv.reader(f)
     for row in reader:
         team_hash_table.append(row)
 
-#TODO:
-    # read in stat data
-    # read in hash table
-    # replace all team names in temporary array with the hash table values
-    # open soup for espn page of todays games
-    #     use selenium to open all games
-    # find all games and scores
-    # iterate through stat data
-    #     if stat team1 == espn team and stat team2 == ...
-    #         append score to output array
+tr_data = np.genfromtxt(sys.argv[1], delimiter=",")
 
-tr_data = np.genfromtxt("./stats/w_out_score/10-161211.csv", delimiter=",")
-
-
-scores_link = "http://www.espn.com/mens-college-basketball/scoreboard/_/date/20161211"
+scores_link = "http://www.espn.com/mens-college-basketball/scoreboard/_/date/20" + sys.argv[2]
 r = requests.get(scores_link)
 
-driver = webdriver.Chrome("/home/kendall/Development/bball_scraping/chromedriver")
+driver = webdriver.Chrome("/home/kendall/Development/bball_scraping/during_game/chromedriver")
 driver.get(scores_link)
 
 # pdb.set_trace()
@@ -77,5 +69,7 @@ final_stats = np.array(final_stats)
 
 #TODO
     # check if file already exists
-filename = "./stats/w_score/" + sys.argv[1] + ".csv"
+filename = "./stats/w_score/" + sys.argv[2] + ".csv"
 np.savetxt(filename, final_stats, delimiter=",")
+
+driver.quit()
