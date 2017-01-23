@@ -138,7 +138,7 @@ for spreadFile in halfTimeSpreads:
                     break
             predictionGame = predictionGame[0:n_steps,:]
 
-            learning_rate = 0.001
+            learning_rate = 0.01
             training_iters = 100000
             batch_size = 50
             display_step = 5
@@ -184,6 +184,11 @@ for spreadFile in halfTimeSpreads:
                 return np.array(input_data), np.array(ground_truth), np.array(scores)
 
             input_data, ground_truth, scores = input_data()
+
+            for i in range(input_data.shape[2]):
+                input_data[:,:,i] = (input_data[:,:,i] - np.min(input_data[:,:,i])) / (np.amax(input_data[:,:,i]) - np.min(input_data[:,:,i]))
+                predictionGame[:,i] = (predictionGame[:,i] - np.min(input_data[:,:,i])) / (np.amax(input_data[:,:,i]) - np.min(input_data[:,:,i]))
+
             randomize = np.arange(len(input_data))
             np.random.shuffle(randomize)
             input_data = input_data[randomize]

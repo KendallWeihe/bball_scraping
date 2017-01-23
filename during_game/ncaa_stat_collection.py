@@ -17,7 +17,7 @@ link = sys.argv[1]
 over = False
 output_table = []
 record_vegas_2nd_half = False
-
+timeCount = 0
 while not over:
 
     r = requests.get(link)
@@ -49,11 +49,13 @@ while not over:
                 # find spread
                 # run network & predict
                 # send text message with results
-        # os.system("python CompareBovada.py " + sys.argv[2] + " " + sys.argv[3])
+        os.system("python CompareBovada.py " + sys.argv[2] + " " + sys.argv[3] + " " + sys.argv[4] + " &")
 
     elif game_time != "Halftime" and game_time != 'None':
-        # pdb.set_trace()
         table = soup.find('table', class_="mod-data")
+        # if timeCount % 5 == 0 and "2nd Half" in game_time:
+        #     os.system("python CompareBovada.py " + sys.argv[2] + " " + sys.argv[3] + " " + sys.argv[4] + " &")
+
         if table != None:
             team_rows = table.findAll('tr')
 
@@ -92,6 +94,7 @@ while not over:
                 print "There was an error -- " + sys.argv[2]
 
     time.sleep(20)
+    timeCount = timeCount + 1
 
 filename = "ncaa_data/" + sys.argv[2] + "_" + sys.argv[3] + "_" + sys.argv[4] + ".csv"
 np.savetxt(filename, np.array(output_table), delimiter=",")

@@ -41,16 +41,12 @@ for i in range(len(files)):
         temp = np.genfromtxt(path+files[i], delimiter=",")
         data = np.concatenate((data, temp), axis=0)
 
-for i in range(data.shape[1]-2):
-    data[:,i] = (data[:,i] - np.min(data[:,i])) / (np.amax(data[:,i]) - np.min(data[:,i]))
-
 predictionFile = np.genfromtxt(sys.argv[1], delimiter=",")
 scores = predictionFile[:,36] - predictionFile[:,37]
 predictionFile = predictionFile[:,0:36]
-
-for i in range(data.shape[1]-2):
-    predictionFile[:,i] = (predictionFile[:,i] - np.min(data[:,i])) / (np.amax(data[:,i]) - np.min(data[:,i]))
-    data[:,i] = (data[:,i] - np.min(data[:,i])) / (np.amax(data[:,i]) - np.min(data[:,i]))
+# for i in range(data.shape[1]-2):
+#     predictionFile[:,i] = (predictionFile[:,i] - np.min(data[:,i])) / (np.amax(data[:,i]) - np.min(data[:,i]))
+#     data[:,i] = (data[:,i] - np.min(data[:,i])) / (np.amax(data[:,i]) - np.min(data[:,i]))
 
 overallAvgPreds = []
 avgPredDiff = []
@@ -70,12 +66,6 @@ for k in range(500):
     n_input = 36
     n_classes = 1
 
-    # Network Parameters
-    n_hidden_1 = 50 # 1st layer number of features
-    n_hidden_2 = 50 # 2nd layer number of features
-    n_hidden_3 = 50
-    n_hidden_4 = 50
-
     # tf Graph input
     x = tf.placeholder("float", [None, n_input])
     y = tf.placeholder("float", [None, n_classes])
@@ -84,62 +74,25 @@ for k in range(500):
     # Create model
     n_hidden = 128
     n_steps = 1
-    def multilayer_perceptron(x, weights, biases):
+    def network(x, weights, biases):
         # x = tf.transpose(x, [1, 0, 2])
         x = tf.reshape(x, [-1, n_input])
         x = tf.split(0, n_steps, x)
         lstm_cell = rnn_cell.BasicLSTMCell(n_hidden, forget_bias=1.0)
         outputs, states = rnn.rnn(lstm_cell, x, dtype=tf.float32)
-        all_lstm_outputs = tf.reshape(tf.stack(outputs, axis=1), [-1, n_steps*n_hidden])
         output = tf.matmul(outputs[-1], weights['out']) + biases['out']
-        # output = tf.matmul(all_lstm_outputs, weights['all_out']) + biases['out']
         return tf.nn.dropout(output, 0.75)
-        # Hidden layer with RELU activation
-        # layer_1 = tf.add(tf.matmul(x, weights['h1']), biases['b1'])
-        # # layer_1 = tf.nn.softmax(layer_1)
-        # layer_1 = tf.nn.relu(layer_1)
-        # layer_1 = tf.nn.l2_normalize(layer_1, 1)
-        # layer_1 = tf.nn.dropout(layer_1, dropout)
-
-        # layer_2 = tf.add(tf.matmul(layer_1, weights['h2']), biases['b2'])
-        # # layer_2 = tf.nn.softmax(layer_2)
-        # layer_2 = tf.nn.relu(layer_2)
-        # layer_2 = tf.nn.l2_normalize(layer_2, 1)
-        # # layer_2 = tf.nn.dropout(layer_2, dropout)
-        #
-        # layer_3 = tf.add(tf.matmul(layer_2, weights['h3']), biases['b3'])
-        # # layer_3 = tf.nn.softmax(layer_3)
-        # layer_3 = tf.nn.relu(layer_3)
-        # layer_3 = tf.nn.l2_normalize(layer_3, 1)
-        # # layer_3 = tf.nn.dropout(layer_3, dropout)
-        #
-        # layer_4 = tf.add(tf.matmul(layer_3, weights['h4']), biases['b4'])
-        # # layer_4 = tf.nn.softmax(layer_4)
-        # layer_4 = tf.nn.relu(layer_4)
-        # layer_4 = tf.nn.l2_normalize(layer_4, 1)
-        # layer_4 = tf.nn.dropout(layer_4, dropout)
-
-        # out_layer = tf.add(tf.matmul(layer_1, weights['out']), biases['out'])
-        # return tf.nn.dropout(out_layer, dropout)
 
     # Store layers weight & bias
     weights = {
-        'h1': tf.Variable(tf.random_normal([n_input, n_hidden_1])),
-        'h2': tf.Variable(tf.random_normal([n_hidden_1, n_hidden_2])),
-        'h3': tf.Variable(tf.random_normal([n_hidden_2, n_hidden_3])),
-        'h4': tf.Variable(tf.random_normal([n_hidden_3, n_hidden_4])),
         'out': tf.Variable(tf.random_normal([n_hidden, n_classes]))
     }
     biases = {
-        'b1': tf.Variable(tf.random_normal([n_hidden_1])),
-        'b2': tf.Variable(tf.random_normal([n_hidden_2])),
-        'b3': tf.Variable(tf.random_normal([n_hidden_3])),
-        'b4': tf.Variable(tf.random_normal([n_hidden_4])),
         'out': tf.Variable(tf.random_normal([n_classes]))
     }
 
     # Construct model
-    pred = multilayer_perceptron(x, weights, biases)
+    pred = network(x, weights, biases)
 
     # Construct model
     n_samples = tf.cast(tf.shape(x)[0], tf.float32)
