@@ -44,9 +44,9 @@ for i in range(len(files)):
 predictionFile = np.genfromtxt(sys.argv[1], delimiter=",")
 scores = predictionFile[:,36] - predictionFile[:,37]
 predictionFile = predictionFile[:,0:36]
-# for i in range(data.shape[1]-2):
-#     predictionFile[:,i] = (predictionFile[:,i] - np.min(data[:,i])) / (np.amax(data[:,i]) - np.min(data[:,i]))
-#     data[:,i] = (data[:,i] - np.min(data[:,i])) / (np.amax(data[:,i]) - np.min(data[:,i]))
+for i in range(data.shape[1]-2):
+    predictionFile[:,i] = (predictionFile[:,i] - np.min(data[:,i])) / (np.amax(data[:,i]) - np.min(data[:,i]))
+    data[:,i] = (data[:,i] - np.min(data[:,i])) / (np.amax(data[:,i]) - np.min(data[:,i]))
 
 overallAvgPreds = []
 avgPredDiff = []
@@ -97,6 +97,7 @@ for k in range(500):
     # Construct model
     n_samples = tf.cast(tf.shape(x)[0], tf.float32)
     cost = tf.reduce_sum(tf.pow(pred-y, 2))/(2*n_samples)
+    # cost = pred
     optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
     accuracy = tf.reduce_mean(tf.abs(tf.sub(pred, y)))
     init = tf.global_variables_initializer()
@@ -131,13 +132,13 @@ for k in range(500):
 
                 slope, intercept, r_value, p_value, std_err = linregress(np.mean(np.array(avg_pred_vals), axis=0), pred_Y)
 
-                # print "R^2 = " + str(r_value**2)
-                # print "Slope = " + str(slope)
-                # print "Intercept = " + str(intercept)
-                # print "Epoch = " + str(epoch)
-                # print "Loss = " + str(np.mean(np.absolute(loss)))
-                # print "Accuracy = " + str(np.mean(np.absolute(acc)))
-                # print "\n"
+                print "R^2 = " + str(r_value**2)
+                print "Slope = " + str(slope)
+                print "Intercept = " + str(intercept)
+                print "Epoch = " + str(epoch)
+                print "Loss = " + str(np.mean(np.absolute(loss)))
+                print "Accuracy = " + str(np.mean(np.absolute(acc)))
+                print "\n"
 
                 predValsPerEpoch = []
                 for i in range(len(pred_X)):

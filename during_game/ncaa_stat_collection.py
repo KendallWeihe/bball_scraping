@@ -91,7 +91,8 @@ while not over:
                 np.savetxt(filename, np.array(output_table), delimiter=",")
 
             except:
-                print "There was an error -- " + sys.argv[2]
+                # print "There was an error -- " + sys.argv[2]
+                pass
 
     time.sleep(20)
     timeCount = timeCount + 1

@@ -6,7 +6,7 @@ import glob
 import matplotlib.pyplot as plt
 from scipy.stats import linregress
 
-predictionFile = "Tulsa_South_Florida_170121.csv"
+predictionFile = "Alcorn_State_Alabama_State_170121.csv"
 predictionGame = np.genfromtxt("./ncaa_data/" + predictionFile, delimiter=",")
 n_steps = predictionGame.shape[0]
 
