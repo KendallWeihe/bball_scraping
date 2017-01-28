@@ -163,7 +163,7 @@ tf.reset_default_graph()
 def sendTextMessage(actualSpread, actualPrediction, team):
     gmail_user = 'kendallweihe@gmail.com'
     gmail_password = 'B0bbleh3adjoe'
-    message = "\nTeam: " + team + " Network Prediction: " + str(actualPrediction) + " Bovada spread: " + str(actualSpread)
+    message = "\nTeam: " + team + " Network Prediction: " + str(actualPrediction)
     try:
         server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
         server.ehlo()

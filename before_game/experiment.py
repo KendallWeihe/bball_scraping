@@ -3,25 +3,18 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pdb
 from tensorflow.python.ops import rnn, rnn_cell
+import tensorflow.contrib.slim as slim
 import os
 from scipy.stats import linregress
 import math
 import sys
 import csv
 
-# ARGV:
-#     experiment file name and path -- located in stats/w_score/
-
-if len(sys.argv) != 2:
-    print "Missing arguments"
-
 team_hash_table = []
 with open("./team_hash_table.csv", 'rb') as f:
     reader = csv.reader(f)
     for row in reader:
         team_hash_table.append(row)
-
-spreads = np.genfromtxt("./testing.csv", delimiter=",")
 
 # Parameters
 learning_rate = 0.01
@@ -30,6 +23,8 @@ training_epochs = 300
 display_step = 10
 n_predictions = 50
 batch_size = 50
+n_input = 36
+n_classes = 1
 
 # Training Data
 path = "stats/w_score/"
@@ -37,161 +32,145 @@ files = os.listdir(path)
 files.sort()
 data = np.genfromtxt(path+files[0], delimiter=",")
 for i in range(len(files)):
-    if "stats/w_out_score/"+files[i] != sys.argv[1]:
-        temp = np.genfromtxt(path+files[i], delimiter=",")
-        data = np.concatenate((data, temp), axis=0)
+    temp = np.genfromtxt(path+files[i], delimiter=",")
+    data = np.concatenate((data, temp), axis=0)
 
-predictionFile = np.genfromtxt(sys.argv[1], delimiter=",")
-scores = predictionFile[:,36] - predictionFile[:,37]
-predictionFile = predictionFile[:,0:36]
+vegasSpreads = data[:,4:6].copy()
+actualScores = data[:,36:38].copy()
+data = data[:,0:36]
+
 for i in range(data.shape[1]-2):
-    predictionFile[:,i] = (predictionFile[:,i] - np.min(data[:,i])) / (np.amax(data[:,i]) - np.min(data[:,i]))
     data[:,i] = (data[:,i] - np.min(data[:,i])) / (np.amax(data[:,i]) - np.min(data[:,i]))
+    mean = np.mean(data[:,i])
+    sigma = np.std(data[:,i])
+    data[:,i] = (data[:,i] - mean) / sigma
 
-overallAvgPreds = []
-avgPredDiff = []
-for k in range(500):
-    print "Session number: " + str(k)
+def compareWithVegas(predictionSpreads, predictionScores, actualScores):
+    correctCount = 0
+    for i in range(predictionScores.shape[0]):
+        vegasSpread = predictionSpreads[i,0] - predictionSpreads[i,1]
+        myPredictedSpread = predictionScores[i]
+        actualSpread = actualScores[i,0] - actualScores[i,1]
+        if (actualSpread > vegasSpread and myPredictedSpread > vegasSpread) or (actualSpread < vegasSpread and myPredictedSpread < vegasSpread):
+            correctCount = correctCount + 1
+    return float(correctCount) / 50.0
 
-    randomize = np.arange(len(data))
-    np.random.shuffle(randomize)
-    data = data[randomize]
+maxAcc = 0.0
+maxAccStats = []
+minAcc = 1.0
+minAccStats = []
+for l in range(100000):
+    randomIndices = np.arange(n_input)
+    np.random.shuffle(randomIndices)
+    randomNumStats = np.random.randint(n_input)
+    randomlyGeneratedStatColumns = randomIndices[0:randomNumStats]
+    randomlySelectedData = np.take(data, randomlyGeneratedStatColumns, axis=1)
 
-    train_X = data[0:data.shape[0]-n_predictions,0:36]
-    train_Y = data[0:data.shape[0]-n_predictions,36] - data[0:data.shape[0]-n_predictions,37]
+    overallAvgPreds = []
+    avgPredDiff = []
+    avgVegasAccuracy = []
+    for k in range(25):
 
-    pred_X = data[data.shape[0]-n_predictions:data.shape[0],0:36]
-    pred_Y = data[data.shape[0]-n_predictions:data.shape[0],36] - data[data.shape[0]-n_predictions:data.shape[0],37]
+        randomize = np.arange(len(data))
+        np.random.shuffle(randomize)
+        data = data[randomize]
+        vegasSpreads = vegasSpreads[randomize]
+        actualScores = actualScores[randomize]
 
-    n_input = 36
-    n_classes = 1
+        train_X = randomlySelectedData[0:randomlySelectedData.shape[0]-n_predictions,:]
+        train_Y = actualScores[0:actualScores.shape[0]-n_predictions,0] - actualScores[0:actualScores.shape[0]-n_predictions,1]
 
-    # tf Graph input
-    x = tf.placeholder("float", [None, n_input])
-    y = tf.placeholder("float", [None, n_classes])
-    keep_prob = tf.placeholder(tf.float32) #dropout (keep probability)
+        pred_X = randomlySelectedData[randomlySelectedData.shape[0]-n_predictions:randomlySelectedData.shape[0],:]
+        pred_Y = actualScores[actualScores.shape[0]-n_predictions:actualScores.shape[0],0] - actualScores[actualScores.shape[0]-n_predictions:actualScores.shape[0],1]
 
-    # Create model
-    n_hidden = 128
-    n_steps = 1
-    def network(x, weights, biases):
-        # x = tf.transpose(x, [1, 0, 2])
-        x = tf.reshape(x, [-1, n_input])
-        x = tf.split(0, n_steps, x)
-        lstm_cell = rnn_cell.BasicLSTMCell(n_hidden, forget_bias=1.0)
-        outputs, states = rnn.rnn(lstm_cell, x, dtype=tf.float32)
-        output = tf.matmul(outputs[-1], weights['out']) + biases['out']
-        return tf.nn.dropout(output, 0.75)
+        predictionSpreads = vegasSpreads[vegasSpreads.shape[0]-n_predictions:vegasSpreads.shape[0],:]
+        predictionSetScores = actualScores[actualScores.shape[0]-n_predictions:actualScores.shape[0],:]
 
-    # Store layers weight & bias
-    weights = {
-        'out': tf.Variable(tf.random_normal([n_hidden, n_classes]))
-    }
-    biases = {
-        'out': tf.Variable(tf.random_normal([n_classes]))
-    }
+        # tf Graph input
+        x = tf.placeholder("float", [None, randomNumStats])
+        y = tf.placeholder("float", [None, n_classes])
+        keep_prob = tf.placeholder(tf.float32) #dropout (keep probability)
 
-    # Construct model
-    pred = network(x, weights, biases)
+        # Create model
+        n_hidden = 128
+        n_steps = 1
+        n_neurons = 25
+        def network(x):
+            x = tf.reshape(x, [-1, randomNumStats])
+            x = tf.split(0, n_steps, x)
+            lstm_cell = rnn_cell.BasicLSTMCell(n_hidden, forget_bias=1.0)
+            outputs, states = rnn.rnn(lstm_cell, x, dtype=tf.float32)
+            output = tf.matmul(outputs[-1], weights['out']) + biases['out']
+            return tf.nn.dropout(output, dropout)
 
-    # Construct model
-    n_samples = tf.cast(tf.shape(x)[0], tf.float32)
-    cost = tf.reduce_sum(tf.pow(pred-y, 2))/(2*n_samples)
-    # cost = pred
-    optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
-    accuracy = tf.reduce_mean(tf.abs(tf.sub(pred, y)))
-    init = tf.global_variables_initializer()
+        # Store layers weight & bias
+        weights = {
+            'out': tf.Variable(tf.random_normal([n_hidden, n_classes]))
+        }
+        biases = {
+            'out': tf.Variable(tf.random_normal([n_classes]))
+        }
 
-    # Launch the graph
-    with tf.Session() as sess:
-        sess.run(init)
-        avg_pred_vals = []
-        avgPredVals = []
-        # Fit all training data
-        for epoch in range(training_epochs):
-            # randomize = np.arange(len(train_X))
-            # np.random.shuffle(randomize)
-            # train_X = train_X[randomize]
-            # train_Y = train_Y[randomize]
+        # Construct model
+        pred = network(x)
 
-            start_pos = np.random.randint(len(train_X) - batch_size)
-            batch_x = train_X[start_pos:start_pos+batch_size].reshape((batch_size, n_input))
-            batch_y = train_Y[start_pos:start_pos+batch_size].reshape((batch_size,n_classes))
-            sess.run(optimizer, feed_dict={x: batch_x, y: batch_y, keep_prob: dropout})
+        # Construct model
+        n_samples = tf.cast(tf.shape(x)[0], tf.float32)
+        cost = tf.reduce_sum(tf.pow(pred-y, 2))/(2*n_samples)
+        optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
+        accuracy = tf.reduce_mean(tf.abs(tf.sub(pred, y)))
+        init = tf.global_variables_initializer()
 
-            loss, acc = sess.run([cost, accuracy], feed_dict={x: batch_x, y: batch_y, keep_prob: 1.0})
+        # Launch the graph
+        with tf.Session() as sess:
+            sess.run(init)
+            avg_pred_vals = []
+            avgPredVals = []
+            adjustedAvgPreds = []
+            # Fit all training data
+            for epoch in range(training_epochs):
+                start_pos = np.random.randint(len(train_X) - batch_size)
+                batch_x = train_X[start_pos:start_pos+batch_size].reshape((batch_size, randomNumStats))
+                batch_y = train_Y[start_pos:start_pos+batch_size].reshape((batch_size,n_classes))
+                sess.run(optimizer, feed_dict={x: batch_x, y: batch_y, keep_prob: dropout})
 
-            if epoch > 1:
+                loss, acc = sess.run([cost, accuracy], feed_dict={x: batch_x, y: batch_y, keep_prob: 1.0})
 
                 pred_vals = []
                 for i in range(len(pred_X)):
-                    pred_val = sess.run(pred, feed_dict={x: pred_X[i].reshape((1,n_input)), keep_prob:1.0})
-                    # print "Prediction = " + str(pred_val[0][0]) + "  Actual = " + str(pred_Y[i])
-                    pred_vals.append(pred_val[0][0])
+                    pred_val = sess.run(pred, feed_dict={x: pred_X[i].reshape((1,randomNumStats)), keep_prob:1.0})
+                    pred_vals.append(float(pred_val))
                 avg_pred_vals.append(np.array(pred_vals))
 
                 slope, intercept, r_value, p_value, std_err = linregress(np.mean(np.array(avg_pred_vals), axis=0), pred_Y)
 
-                print "R^2 = " + str(r_value**2)
-                print "Slope = " + str(slope)
-                print "Intercept = " + str(intercept)
-                print "Epoch = " + str(epoch)
-                print "Loss = " + str(np.mean(np.absolute(loss)))
-                print "Accuracy = " + str(np.mean(np.absolute(acc)))
-                print "\n"
-
-                predValsPerEpoch = []
-                for i in range(len(pred_X)):
-                    predValsPerEpoch.append(slope * np.mean(np.array(avg_pred_vals)[:,i] + intercept))
-                #     print str(slope * np.mean(np.array(avg_pred_vals)[:,i]) + intercept) + "," + str(pred_Y[i])
+                # print "R^2 = " + str(r_value**2)
+                # print "Slope = " + str(slope)
+                # print "Intercept = " + str(intercept)
+                # print "Epoch = " + str(epoch)
+                # print "Loss = " + str(np.mean(np.absolute(loss)))
+                # print "Accuracy = " + str(np.mean(np.absolute(acc)))
                 # print "\n"
 
-                vals = []
-                for i in range(predictionFile.shape[0]):
-                    pred_val = sess.run(pred, feed_dict={x: predictionFile[i,:].reshape((1,n_input)), keep_prob: 1.0})
-                    vals.append(float(pred_val))
-                avgPredVals.append(vals)
-
-                adjustedAvgPreds = []
-                tempArr = np.array(avgPredVals)
+                adjustedPreds = []
+                tempArr = np.array(avg_pred_vals)
                 for i in range(tempArr.shape[1]):
-                    adjustedAvgPreds.append(slope * np.mean(tempArr[:,i]) + intercept)
-                #     print str(team_hash_table[int(predictionFile[i,0])][0]) + ",  " + str(team_hash_table[int(predictionFile[i,1])][0]) + ",  " + str(slope * np.mean(tempArr[:,i]) + intercept)
-                # print "\n"
+                    adjustedPreds.append(slope * np.mean(tempArr[:,i]) + intercept)
+                adjustedAvgPreds.append(adjustedPreds)
 
-    overallAvgPreds.append(adjustedAvgPreds)
-    tf.reset_default_graph()
+        acc = compareWithVegas(predictionSpreads, np.mean(adjustedAvgPreds, axis=0), predictionSetScores)
+        avgVegasAccuracy.append(acc)
+        print "Average accuracy against vegas: " + str(np.mean(avgVegasAccuracy))
+        tf.reset_default_graph()
 
-    if k % 2 == 0:
-        tempArr = np.array(overallAvgPreds)
-        correctCount = 0
-        correctGames = []
-        for i in range(tempArr.shape[1]):
-            print str(team_hash_table[int(predictionFile[i,0])][0]) + ",  " + str(team_hash_table[int(predictionFile[i,1])][0]) + ",  " + str(np.mean(tempArr[:,i]))
-        print "\n"
-        for i in range(tempArr.shape[1]):
-            score = -1 * np.mean(tempArr[:,i])
-            if (score > spreads[i,0] and spreads[i,1] > spreads[i,0]) or (score < spreads[i,0] and spreads[i,1] < spreads[i,0]):
-                print str(spreads[i,0]) + "," + str(spreads[i,1]) + "," + str(score) + ",1"
-                correctCount = correctCount + 1
-                correctGames.append([spreads[i,0], spreads[i,1], score])
-            else:
-                print str(spreads[i,0]) + "," + str(spreads[i,1]) + "," + str(score) + ",0"
+    if np.mean(avgVegasAccuracy) > maxAcc:
+        maxAcc = np.mean(avgVegasAccuracy)
+        maxAccStats = randomlyGeneratedStatColumns
+    if np.mean(avgVegasAccuracy) < minAcc:
+        minAcc = np.mean(avgVegasAccuracy)
+        minAccStats = randomlyGeneratedStatColumns
 
-        print "\n"
-        print "Number correct = " + str(correctCount)
-        print "Accuracy = " + str(float(correctCount)/float(tempArr.shape[1]))
-
-        absAvgDiff = []
-        absMedianDiff = []
-        for i in range(len(scores)):
-            absAvgDiff.append(math.fabs(scores[i] - np.mean(tempArr[:,i])))
-            absMedianDiff.append(math.fabs(scores[i] - np.median(tempArr[:,i])))
-            avgPredDiff.append(scores[i] - np.mean(tempArr[:,i]))
-        print "\n"
-        print "Average mean difference = " + str(np.mean(absAvgDiff))
-        print "Median mean difference = " + str(np.median(absAvgDiff))
-        print "Average median difference = " + str(np.mean(absMedianDiff))
-        print "Median median difference = " + str(np.median(absMedianDiff))
-        print "Average difference (GT - Pred) = " + str(np.mean(avgPredDiff))
-        print "\n"
+    print "Current maximum accuracy: " + str(maxAcc)
+    print "Current maximum accuracy based on stats: " + str(maxAccStats)
+    print "Current minimum accuracy: " + str(minAcc)
+    print "Current minimum accuracy based on stats: " + str(minAccStats)
