@@ -11,8 +11,8 @@ import csv
 
 # ARGV:
 #     prediction file name and path -- located in stats/w_out_score/
-
-if len(sys.argv) != 2:
+    # date
+if len(sys.argv) != 3:
     print "Missing arguments"
 
 # Parameters
@@ -22,7 +22,7 @@ display_step = 10
 n_predictions = 0
 batch_size = 50
 
-predictionFile = np.genfromtxt("./stats/w_score/" + sys.argv[1], delimiter=",")
+predictionFile = np.genfromtxt(sys.argv[1], delimiter=",")
 
 # Training Data
 path = "./stats/w_score/"
@@ -131,34 +131,25 @@ with tf.Session() as sess:
 
         slope, intercept, r_value, p_value, std_err = linregress(np.mean(np.array(avg_pred_vals), axis=0), pred_Y)
 
-        print "R^2 = " + str(r_value**2)
-        print "Slope = " + str(slope)
-        print "Intercept = " + str(intercept)
-        print "Epoch = " + str(epoch)
-        print "Loss = " + str(np.mean(np.absolute(loss)))
-        print "Accuracy = " + str(np.mean(np.absolute(acc)))
-        print "\n"
+        # print "R^2 = " + str(r_value**2)
+        # print "Slope = " + str(slope)
+        # print "Intercept = " + str(intercept)
+        # print "Epoch = " + str(epoch)
+        # print "Loss = " + str(np.mean(np.absolute(loss)))
+        # print "Accuracy = " + str(np.mean(np.absolute(acc)))
+        # print "\n"
 
         tempPredVals = []
         for i in range(predictionFile.shape[0]):
             predictionValue = float(sess.run(pred, feed_dict={x: predictionFile[i].reshape((1,n_input)), keep_prob:1.0}))
             tempPredVals.append(predictionValue)
         avgPredictionValues.append(tempPredVals)
-        temp = np.array(avgPredictionValues)
-        for i in range(predictionFile.shape[0]):
-            # print team_hash_table[int(teams[i])][0] + ": " + str(np.mean(temp[:,i]))
-            print team_hash_table[int(teams[i])][0] + ": " + str(np.mean(temp[:,i]))
-        print "\n"
 
-    correctCount = 0
-    gameCount = 0
     avgPredVals = np.mean(avgPredictionValues, axis=0)
+    newFileData = []
     for i in range(avgPredVals.shape[0]):
-        # if math.fabs(predictionSpreads[i] - avgPredVals[i]) > 5:
         if (predictionSpreads[i] > avgPredVals[i] and predictionSpreads[i] > predictionScores[i]) or (predictionSpreads[i] < avgPredVals[i] and predictionSpreads[i] < predictionScores[i]):
-            correctCount = correctCount + 1
-            # gameCount = gameCount + 1
-    print "Accuracy = " + str(float(correctCount)/avgPredVals.shape[0])
-    # print "Accuracy > 5 = " + str(float(correctCount)/float(gameCount))
-    # print "Number of games = " + str(gameCount)
-    # print "Total number of games = " + str(avgPredVals.shape[0])
+            newFileData.append(np.append(predictionFile[i], 1.0))
+        else:
+            newFileData.append(np.append(predictionFile[i], 0.0))
+    np.savetxt("./withNetworkPrediction/" + sys.argv[2], np.array(newFileData), delimiter=",")

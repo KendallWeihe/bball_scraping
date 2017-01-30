@@ -39,11 +39,11 @@ vegasSpreads = data[:,4:6].copy()
 actualScores = data[:,36:38].copy()
 data = data[:,0:36]
 
-for i in range(data.shape[1]-2):
+for i in range(data.shape[1]):
     data[:,i] = (data[:,i] - np.min(data[:,i])) / (np.amax(data[:,i]) - np.min(data[:,i]))
-    mean = np.mean(data[:,i])
-    sigma = np.std(data[:,i])
-    data[:,i] = (data[:,i] - mean) / sigma
+    # mean = np.mean(data[:,i])
+    # sigma = np.std(data[:,i])
+    # data[:,i] = (data[:,i] - mean) / sigma
 
 def compareWithVegas(predictionSpreads, predictionScores, actualScores):
     correctCount = 0
@@ -62,13 +62,14 @@ minAccStats = []
 for l in range(100000):
     randomIndices = np.arange(n_input)
     np.random.shuffle(randomIndices)
-    randomNumStats = np.random.randint(n_input)
+    randomNumStats = np.random.randint(1,n_input)
     randomlyGeneratedStatColumns = randomIndices[0:randomNumStats]
     randomlySelectedData = np.take(data, randomlyGeneratedStatColumns, axis=1)
 
     overallAvgPreds = []
     avgPredDiff = []
     avgVegasAccuracy = []
+    avgMeanAcc = []
     for k in range(25):
 
         randomize = np.arange(len(data))
@@ -79,7 +80,6 @@ for l in range(100000):
 
         train_X = randomlySelectedData[0:randomlySelectedData.shape[0]-n_predictions,:]
         train_Y = actualScores[0:actualScores.shape[0]-n_predictions,0] - actualScores[0:actualScores.shape[0]-n_predictions,1]
-
         pred_X = randomlySelectedData[randomlySelectedData.shape[0]-n_predictions:randomlySelectedData.shape[0],:]
         pred_Y = actualScores[actualScores.shape[0]-n_predictions:actualScores.shape[0],0] - actualScores[actualScores.shape[0]-n_predictions:actualScores.shape[0],1]
 
@@ -152,25 +152,32 @@ for l in range(100000):
                 # print "Accuracy = " + str(np.mean(np.absolute(acc)))
                 # print "\n"
 
-                adjustedPreds = []
-                tempArr = np.array(avg_pred_vals)
-                for i in range(tempArr.shape[1]):
-                    adjustedPreds.append(slope * np.mean(tempArr[:,i]) + intercept)
-                adjustedAvgPreds.append(adjustedPreds)
+                # adjustedPreds = []
+                # tempArr = np.array(avg_pred_vals)
+                # for i in range(tempArr.shape[1]):
+                #     adjustedPreds.append(np.mean(tempArr[:,i]))
+                # adjustedAvgPreds.append(adjustedPreds)
 
-        acc = compareWithVegas(predictionSpreads, np.mean(adjustedAvgPreds, axis=0), predictionSetScores)
-        avgVegasAccuracy.append(acc)
-        print "Average accuracy against vegas: " + str(np.mean(avgVegasAccuracy))
+                meanPredictions = np.mean(avg_pred_vals, axis=0) * slope + intercept
+
+        # acc = compareWithVegas(predictionSpreads, np.mean(adjustedAvgPreds, axis=0), predictionSetScores)
+        meanAcc = compareWithVegas(predictionSpreads, meanPredictions, predictionSetScores)
+        avgMeanAcc.append(meanAcc)
+
+        print "Average mean accuracy against vegas: " + str(np.mean(avgMeanAcc))
         tf.reset_default_graph()
+        if k > 4 and np.mean(avgMeanAcc) < 0.53:
+            break
 
-    if np.mean(avgVegasAccuracy) > maxAcc:
-        maxAcc = np.mean(avgVegasAccuracy)
+    if np.mean(avgMeanAcc) > maxAcc:
+        maxAcc = np.mean(avgMeanAcc)
         maxAccStats = randomlyGeneratedStatColumns
-    if np.mean(avgVegasAccuracy) < minAcc:
-        minAcc = np.mean(avgVegasAccuracy)
+    if np.mean(avgMeanAcc) < minAcc:
+        minAcc = np.mean(avgMeanAcc)
         minAccStats = randomlyGeneratedStatColumns
 
     print "Current maximum accuracy: " + str(maxAcc)
     print "Current maximum accuracy based on stats: " + str(maxAccStats)
     print "Current minimum accuracy: " + str(minAcc)
     print "Current minimum accuracy based on stats: " + str(minAccStats)
+    print "\n"
