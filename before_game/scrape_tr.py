@@ -15,7 +15,7 @@ with open('team_hash_table.csv', 'rb') as f:
     for row in reader:
         team_hash_table.append(row)
 
-link = "https://www.teamrankings.com/ncb/schedules/?date=2017-01-29"
+link = "https://www.teamrankings.com/ncb/schedules/?date=2017-02-04"
 r = requests.get(link)
 soup = BeautifulSoup(r.text, "html.parser")
 

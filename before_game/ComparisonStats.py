@@ -10,8 +10,7 @@ for i in range(len(files)):
     temp = np.genfromtxt(path+files[i], delimiter=",")
     data = np.concatenate((data, temp), axis=0)
 
-pdb.set_trace()
-print
+print float(len(np.where(data[:,28]==1)[0]))/data.shape[0]
 
 # results = np.genfromtxt("./ComparisonStats.csv", delimiter=",")
 # print "Total number of games: " + str(results.shape[0]) + "\n"

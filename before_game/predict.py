@@ -22,7 +22,7 @@ display_step = 10
 n_predictions = 0
 batch_size = 50
 
-predictionFile = np.genfromtxt("./stats/w_score/" + sys.argv[1], delimiter=",")
+predictionFile = np.genfromtxt(sys.argv[1], delimiter=",")
 
 # Training Data
 path = "./stats/w_score/"
@@ -30,9 +30,8 @@ files = os.listdir(path)
 files.sort()
 data = np.genfromtxt(path+files[0], delimiter=",")
 for i in range(len(files)):
-    if "stats/w_score/"+files[i] != sys.argv[1]:
-        temp = np.genfromtxt(path+files[i], delimiter=",")
-        data = np.concatenate((data, temp), axis=0)
+    temp = np.genfromtxt(path+files[i], delimiter=",")
+    data = np.concatenate((data, temp), axis=0)
 
 vegasSpreads = data[:,4:6].copy()
 actualScores = data[:,36:38].copy()
@@ -41,8 +40,6 @@ randomlyGeneratedStatColumns = [9, 30, 12, 29, 23, 13, 15, 20,  7,  5, 32, 35, 2
 data = np.take(data, randomlyGeneratedStatColumns, axis=1)
 
 teams = predictionFile[:,0]
-predictionSpreads = predictionFile[:,4].copy() - predictionFile[:,5].copy()
-predictionScores = predictionFile[:,36].copy() - predictionFile[:,37].copy()
 predictionFile = np.take(predictionFile, randomlyGeneratedStatColumns, axis=1)
 
 n_input = data.shape[1]
@@ -131,13 +128,13 @@ with tf.Session() as sess:
 
         slope, intercept, r_value, p_value, std_err = linregress(np.mean(np.array(avg_pred_vals), axis=0), pred_Y)
 
-        print "R^2 = " + str(r_value**2)
-        print "Slope = " + str(slope)
-        print "Intercept = " + str(intercept)
-        print "Epoch = " + str(epoch)
-        print "Loss = " + str(np.mean(np.absolute(loss)))
-        print "Accuracy = " + str(np.mean(np.absolute(acc)))
-        print "\n"
+        # print "R^2 = " + str(r_value**2)
+        # print "Slope = " + str(slope)
+        # print "Intercept = " + str(intercept)
+        # print "Epoch = " + str(epoch)
+        # print "Loss = " + str(np.mean(np.absolute(loss)))
+        # print "Accuracy = " + str(np.mean(np.absolute(acc)))
+        # print "\n"
 
         tempPredVals = []
         for i in range(predictionFile.shape[0]):
@@ -146,19 +143,5 @@ with tf.Session() as sess:
         avgPredictionValues.append(tempPredVals)
         temp = np.array(avgPredictionValues)
         for i in range(predictionFile.shape[0]):
-            # print team_hash_table[int(teams[i])][0] + ": " + str(np.mean(temp[:,i]))
             print team_hash_table[int(teams[i])][0] + ": " + str(np.mean(temp[:,i]))
         print "\n"
-
-    correctCount = 0
-    gameCount = 0
-    avgPredVals = np.mean(avgPredictionValues, axis=0)
-    for i in range(avgPredVals.shape[0]):
-        # if math.fabs(predictionSpreads[i] - avgPredVals[i]) > 5:
-        if (predictionSpreads[i] > avgPredVals[i] and predictionSpreads[i] > predictionScores[i]) or (predictionSpreads[i] < avgPredVals[i] and predictionSpreads[i] < predictionScores[i]):
-            correctCount = correctCount + 1
-            # gameCount = gameCount + 1
-    print "Accuracy = " + str(float(correctCount)/avgPredVals.shape[0])
-    # print "Accuracy > 5 = " + str(float(correctCount)/float(gameCount))
-    # print "Number of games = " + str(gameCount)
-    # print "Total number of games = " + str(avgPredVals.shape[0])

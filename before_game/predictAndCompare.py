@@ -11,8 +11,8 @@ import csv
 
 # ARGV:
 #     prediction file name and path -- located in stats/w_out_score/
-    # date
-if len(sys.argv) != 3:
+
+if len(sys.argv) != 2:
     print "Missing arguments"
 
 # Parameters
@@ -37,10 +37,11 @@ for i in range(len(files)):
 vegasSpreads = data[:,4:6].copy()
 actualScores = data[:,36:38].copy()
 data = data[:,0:36]
-randomlyGeneratedStatColumns = [9, 30, 12, 29, 23, 13, 15, 20,  7,  5, 32, 35, 28, 33, 26, 27, 22, 11, 21, 17, 34, 14, 16,  6, 25, 31,  8, 19,  4,  1]
-#0.5632
-randomlyGeneratedStatColumns = [15, 26, 12, 23, 17, 33,  1, 30, 32, 29, 16, 27, 10,  3, 20, 35, 14, 34, 21,  9,  6, 28, 13,  8, 19, 2, 22,  5]
 
+# 0.5566
+randomlyGeneratedStatColumns = [9, 30, 12, 29, 23, 13, 15, 20,  7,  5, 32, 35, 28, 33, 26, 27, 22, 11, 21, 17, 34, 14, 16,  6, 25, 31,  8, 19,  4,  1]
+# 0.5632
+randomlyGeneratedStatColumns = [15, 26, 12, 23, 17, 33,  1, 30, 32, 29, 16, 27, 10,  3, 20, 35, 14, 34, 21,  9,  6, 28, 13,  8, 19, 2, 22,  5]
 data = np.take(data, randomlyGeneratedStatColumns, axis=1)
 
 teams = predictionFile[:,0]
@@ -76,7 +77,6 @@ train_X = data[0:data.shape[0]-n_predictions,:]
 train_Y = actualScores[0:actualScores.shape[0]-n_predictions,0] - actualScores[0:actualScores.shape[0]-n_predictions,1]
 pred_X = data[data.shape[0]-n_predictions:data.shape[0],:]
 pred_Y = actualScores[actualScores.shape[0]-n_predictions:actualScores.shape[0],0] - actualScores[actualScores.shape[0]-n_predictions:actualScores.shape[0],1]
-
 
 overallAvgPreds = []
 for k in range(25):
@@ -154,12 +154,3 @@ for i in range(overallAvgPredVals.shape[0]):
     if (predictionSpreads[i] > overallAvgPredVals[i] and predictionSpreads[i] > predictionScores[i]) or (predictionSpreads[i] < overallAvgPredVals[i] and predictionSpreads[i] < predictionScores[i]):
         correctCount = correctCount + 1
 print "\nFinal average accuracy: " + str(float(correctCount)/float(overallAvgPredVals.shape[0]))
-
-avgPredVals = np.mean(avgPredictionValues, axis=0)
-newFileData = []
-for i in range(overallAvgPredVals.shape[0]):
-    if (predictionSpreads[i] > overallAvgPredVals[i] and predictionSpreads[i] > predictionScores[i]) or (predictionSpreads[i] < overallAvgPredVals[i] and predictionSpreads[i] < predictionScores[i]):
-        newFileData.append(np.append(predictionFile[i], 1.0))
-    else:
-        newFileData.append(np.append(predictionFile[i], 0.0))
-np.savetxt("./withNetworkPrediction/" + sys.argv[2], np.array(newFileData), delimiter=",")
