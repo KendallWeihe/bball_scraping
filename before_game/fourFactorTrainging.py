@@ -36,27 +36,27 @@ path = "stats/w_score/"
 files = os.listdir(path)
 files.sort()
 
-# stats = np.genfromtxt(path+files[0], delimiter=",")[:, [14, 15, 18, 19, 20, 21, 26, 27, 28, 29, 36, 37]]
-# fourFactors = stats[:,0:8]
-# fourFactors[:,6] = fourFactors[:,6] / (fourFactors[:,6] + stats[:,9])
-# fourFactors[:,7] = fourFactors[:,7] / (fourFactors[:,7] + stats[:,8])
-# data = np.concatenate((fourFactors, stats[:,10:12]), axis=1)
-# for i in range(1,len(files)):
-#     if path+files[i] != sys.argv[1]:
-#         stats = np.genfromtxt(path+files[i], delimiter=",")[:, [14, 15, 18, 19, 20, 21, 26, 27, 28, 29, 36, 37]]
-#         fourFactors = stats[:,0:8]
-#         fourFactors[:,6] = fourFactors[:,6] / (fourFactors[:,6] + stats[:,9])
-#         fourFactors[:,7] = fourFactors[:,7] / (fourFactors[:,7] + stats[:,8])
-#         fourFactors = np.concatenate((fourFactors, stats[:,10:12]), axis=1)
-#         data = np.concatenate((data, fourFactors), axis=0)
-#
-# stats = np.genfromtxt(sys.argv[1], delimiter=",")[:, [14, 15, 18, 19, 20, 21, 26, 27, 28, 29, 36, 37]]
-# predictionFile = stats[:,0:8]
-# predictionFile[:,6] = predictionFile[:,6] / (predictionFile[:,6] + stats[:,9])
-# predictionFile[:,7] = predictionFile[:,7] / (predictionFile[:,7] + stats[:,8])
-# predictionFile = np.concatenate((predictionFile, stats[:,10:12]), axis=1)
-# scores = predictionFile[:,8] - predictionFile[:,9]
-# predictionFile = predictionFile[:,0:8]
+stats = np.genfromtxt(path+files[0], delimiter=",")[:, [14, 15, 18, 19, 20, 21, 26, 27, 28, 29, 36, 37]]
+fourFactors = stats[:,0:8]
+fourFactors[:,6] = fourFactors[:,6] / (fourFactors[:,6] + stats[:,9])
+fourFactors[:,7] = fourFactors[:,7] / (fourFactors[:,7] + stats[:,8])
+data = np.concatenate((fourFactors, stats[:,10:12]), axis=1)
+for i in range(1,len(files)):
+    if path+files[i] != sys.argv[1]:
+        stats = np.genfromtxt(path+files[i], delimiter=",")[:, [14, 15, 18, 19, 20, 21, 26, 27, 28, 29, 36, 37]]
+        fourFactors = stats[:,0:8]
+        fourFactors[:,6] = fourFactors[:,6] / (fourFactors[:,6] + stats[:,9])
+        fourFactors[:,7] = fourFactors[:,7] / (fourFactors[:,7] + stats[:,8])
+        fourFactors = np.concatenate((fourFactors, stats[:,10:12]), axis=1)
+        data = np.concatenate((data, fourFactors), axis=0)
+
+stats = np.genfromtxt(sys.argv[1], delimiter=",")[:, [14, 15, 18, 19, 20, 21, 26, 27, 28, 29, 36, 37]]
+predictionFile = stats[:,0:8]
+predictionFile[:,6] = predictionFile[:,6] / (predictionFile[:,6] + stats[:,9])
+predictionFile[:,7] = predictionFile[:,7] / (predictionFile[:,7] + stats[:,8])
+predictionFile = np.concatenate((predictionFile, stats[:,10:12]), axis=1)
+scores = predictionFile[:,8] - predictionFile[:,9]
+predictionFile = predictionFile[:,0:8]
 
 data = np.array(data)
 for i in range(data.shape[1]-2):
